@@ -626,6 +626,9 @@ type ResponseTimeRecord = {
   confidenceOption: ConfidenceOption;
 };
 
+const NORMAL_MODE_BANK = NORMAL_LITERATURE_PAIRS.slice(0, 8);
+const TIMED_MARATHON_BANK = NORMAL_LITERATURE_PAIRS.slice(8);
+
 function trackTrial(data: {
   sessionId: string;
   module: GameModule;
@@ -677,10 +680,9 @@ export default function Home() {
   const [marathonOrder, setMarathonOrder] = useState<number[]>([]);
   const [marathonOrderPosition, setMarathonOrderPosition] = useState(0);
 
-  const literatureBank =
-    NORMAL_LITERATURE_PAIRS;
+  const literatureBank = mode === "normal" ? NORMAL_MODE_BANK : TIMED_MARATHON_BANK;
   const currentLiteratureIndex =
-    mode === "marathon" && marathonOrder.length > 0
+    (mode === "marathon" || mode === "timed") && marathonOrder.length > 0
       ? marathonOrder[marathonOrderPosition]
       : currentIndex % literatureBank.length;
   const literaturePair = literatureBank[currentLiteratureIndex];
@@ -813,9 +815,9 @@ export default function Home() {
   };
 
   const goToNextLiteratureQuestion = () => {
-    const bank = NORMAL_LITERATURE_PAIRS;
+    const bank = mode === "normal" ? NORMAL_MODE_BANK : TIMED_MARATHON_BANK;
 
-    if (mode === "marathon" && marathonOrder.length > 0) {
+    if ((mode === "marathon" || mode === "timed") && marathonOrder.length > 0) {
       if (marathonOrderPosition + 1 < marathonOrder.length) {
         const nextPos = marathonOrderPosition + 1;
         setMarathonOrderPosition(nextPos);
@@ -863,15 +865,15 @@ export default function Home() {
     setMarathonRemainingMs(15000);
     setMarathonStreak(0);
     setMarathonAnsweredCount(0);
-    if (pickedMode === "marathon") {
-      const shuffled = makeShuffledIndices(NORMAL_LITERATURE_PAIRS.length);
+    if (pickedMode === "marathon" || pickedMode === "timed") {
+      const shuffled = makeShuffledIndices(TIMED_MARATHON_BANK.length);
       setMarathonOrder(shuffled);
       setMarathonOrderPosition(0);
       startLiteratureRound(shuffled[0] ?? 0);
     } else {
       setMarathonOrder([]);
       setMarathonOrderPosition(0);
-      startLiteratureRound();
+      startLiteratureRound(0);
     }
   };
 
@@ -1053,8 +1055,7 @@ export default function Home() {
 
   const goToNextRound = () => {
     if (module === "literature") {
-      const bank =
-        NORMAL_LITERATURE_PAIRS;
+      const bank = mode === "normal" ? NORMAL_MODE_BANK : TIMED_MARATHON_BANK;
       const nextIndex =
         bank.length > 1 ? (currentIndex + 1) % bank.length : currentIndex;
       setCurrentIndex(nextIndex);
