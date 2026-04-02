@@ -679,6 +679,7 @@ export default function Home() {
   const [marathonAnsweredCount, setMarathonAnsweredCount] = useState(0);
   const [marathonOrder, setMarathonOrder] = useState<number[]>([]);
   const [marathonOrderPosition, setMarathonOrderPosition] = useState(0);
+  const [marathonEndReason, setMarathonEndReason] = useState<"timeout" | "wrong" | "depleted">("timeout");
 
   const literatureBank = mode === "normal" ? NORMAL_MODE_BANK : TIMED_MARATHON_BANK;
   const currentLiteratureIndex =
@@ -795,6 +796,7 @@ export default function Home() {
       setMarathonRemainingMs(next);
       if (next <= 0) {
         clearInterval(id);
+        setMarathonEndReason("timeout");
         setView("marathon-complete");
       }
     }, 100);
@@ -823,11 +825,10 @@ export default function Home() {
         setMarathonOrderPosition(nextPos);
         setCurrentIndex(marathonOrder[nextPos]);
       } else {
-        // Exhausted the shuffled run: reshuffle for continued play.
-        const reshuffled = makeShuffledIndices(bank.length);
-        setMarathonOrder(reshuffled);
-        setMarathonOrderPosition(0);
-        setCurrentIndex(reshuffled[0] ?? 0);
+        // Exhausted all questions — player completed a full pass.
+        setMarathonEndReason("depleted");
+        setView("marathon-complete");
+        return;
       }
     } else {
       const nextIndex = bank.length > 1 ? (currentIndex + 1) % bank.length : currentIndex;
@@ -1042,6 +1043,7 @@ export default function Home() {
     setMarathonAnsweredCount((prev) => prev + 1);
 
     if (!pickedHuman) {
+      setMarathonEndReason("wrong");
       setView("marathon-complete");
       return;
     }
@@ -1131,6 +1133,7 @@ export default function Home() {
     setMarathonAnsweredCount(0);
     setMarathonOrder([]);
     setMarathonOrderPosition(0);
+    setMarathonEndReason("timeout");
   };
 
   return (
@@ -1739,10 +1742,14 @@ export default function Home() {
         {view === "marathon-complete" && module === "literature" && mode === "marathon" && (
           <section className="flex flex-1 flex-col items-center justify-center gap-5 py-12 text-center">
             <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              Marathon complete
+              {marathonEndReason === "depleted" ? "Marathon complete" : "Game over!"}
             </h2>
             <p className="text-neutral-300">
-              Your run ended on time-out or first miss.
+              {marathonEndReason === "depleted"
+                ? "You answered every question — impressive!"
+                : marathonEndReason === "wrong"
+                ? "You selected the wrong excerpt."
+                : "Time's up!"}
             </p>
             <p className="rounded-none border border-white/25 bg-neutral-900/60 px-6 py-3 text-lg">
               Streak score: <span className="font-bold text-white">{marathonStreak}</span>
