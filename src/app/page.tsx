@@ -674,7 +674,7 @@ export default function Home() {
   const [timedRemainingMs, setTimedRemainingMs] = useState(120000);
   const [timedCorrectCount, setTimedCorrectCount] = useState(0);
   const [timedAnsweredCount, setTimedAnsweredCount] = useState(0);
-  const [marathonRemainingMs, setMarathonRemainingMs] = useState(15000);
+  const [marathonRemainingMs, setMarathonRemainingMs] = useState(60000);
   const [marathonStreak, setMarathonStreak] = useState(0);
   const [marathonAnsweredCount, setMarathonAnsweredCount] = useState(0);
   const [marathonOrder, setMarathonOrder] = useState<number[]>([]);
@@ -862,7 +862,7 @@ export default function Home() {
     setTimedRemainingMs(120000);
     setTimedCorrectCount(0);
     setTimedAnsweredCount(0);
-    setMarathonRemainingMs(15000);
+    setMarathonRemainingMs(60000);
     setMarathonStreak(0);
     setMarathonAnsweredCount(0);
     if (pickedMode === "marathon" || pickedMode === "timed") {
@@ -1047,7 +1047,8 @@ export default function Home() {
     }
 
     const nextStreak = marathonStreak + 1;
-    const bonusMs = Math.max(0, 5000 * (nextStreak - 0.1));
+    // n = questions already answered before this one
+    const bonusMs = Math.max(0, (60 - 3 * marathonAnsweredCount) * 1000);
     setMarathonStreak(nextStreak);
     setMarathonRemainingMs((prev) => prev + bonusMs);
     goToNextLiteratureQuestion();
@@ -1125,7 +1126,7 @@ export default function Home() {
     setTimedRemainingMs(120000);
     setTimedCorrectCount(0);
     setTimedAnsweredCount(0);
-    setMarathonRemainingMs(15000);
+    setMarathonRemainingMs(60000);
     setMarathonStreak(0);
     setMarathonAnsweredCount(0);
     setMarathonOrder([]);
