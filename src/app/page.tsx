@@ -1152,8 +1152,8 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-neutral-950 to-black text-neutral-50">
-      <main className="mx-auto flex min-h-screen max-w-5xl flex-col px-4 py-8 sm:px-6 lg:px-10">
+    <div className={`bg-gradient-to-b from-black via-neutral-950 to-black text-neutral-50${view === "literature" ? " h-screen overflow-hidden" : " min-h-screen"}`}>
+      <main className={`mx-auto max-w-5xl flex flex-col px-4 py-8 sm:px-6 lg:px-10${view === "literature" ? " h-full" : " min-h-screen"}`}>
         {/* Global header: title only on choose; title + challenge name on game screens */}
         <header className="border-b border-white/10 pb-6">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -1262,8 +1262,9 @@ export default function Home() {
 
         {/* ----- VIEW: Literature Challenge (Option A / Option B, 6-point scale) ----- */}
         {view === "literature" && (
-          <section className="flex flex-1 flex-col gap-6 pt-6">
-            <div className="flex items-baseline justify-between gap-4">
+          <section className="flex flex-1 flex-col pt-6" style={{ minHeight: 0 }}>
+            {/* Header */}
+            <div className="flex items-baseline justify-between gap-4 pb-4">
               <div>
                 <p className="text-xs uppercase tracking-[0.16em] text-neutral-500">
                   {mode === "normal"
@@ -1309,95 +1310,101 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="flex flex-col gap-3">
-                <div className="rounded-none border border-white/20 bg-neutral-200 p-5 shadow-lg">
-                  <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-600">
-                    Option A
+            {/* Scrollable text panels */}
+            <div className="flex-1 overflow-y-auto pb-4" style={{ minHeight: 0 }}>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="flex flex-col gap-3">
+                  <div className="rounded-none border border-white/20 bg-neutral-200 p-5 shadow-lg">
+                    <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-600">
+                      Option A
+                    </div>
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-900">
+                      {leftText}
+                    </p>
                   </div>
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-900">
-                    {leftText}
-                  </p>
+                  {roundResult && leftExplanation && (
+                    <div className="flex flex-col gap-2">
+                      <WhyButton
+                        label="Why?"
+                        expanded={showWhyA}
+                        onToggle={() => setShowWhyA((v) => !v)}
+                      />
+                      {showWhyA && <WhyTooltip text={leftExplanation} />}
+                    </div>
+                  )}
                 </div>
-                {roundResult && leftExplanation && (
-                  <div className="flex flex-col gap-2">
-                    <WhyButton
-                      label="Why?"
-                      expanded={showWhyA}
-                      onToggle={() => setShowWhyA((v) => !v)}
-                    />
-                    {showWhyA && <WhyTooltip text={leftExplanation} />}
-                  </div>
-                )}
-              </div>
 
-              <div className="flex flex-col gap-3">
-                <div className="rounded-none border border-white/20 bg-neutral-200 p-5 shadow-lg">
-                  <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-600">
-                    Option B
+                <div className="flex flex-col gap-3">
+                  <div className="rounded-none border border-white/20 bg-neutral-200 p-5 shadow-lg">
+                    <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-600">
+                      Option B
+                    </div>
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-900">
+                      {rightText}
+                    </p>
                   </div>
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-900">
-                    {rightText}
-                  </p>
+                  {roundResult && rightExplanation && (
+                    <div className="flex flex-col gap-2">
+                      <WhyButton
+                        label="Why?"
+                        expanded={showWhyB}
+                        onToggle={() => setShowWhyB((v) => !v)}
+                      />
+                      {showWhyB && <WhyTooltip text={rightExplanation} />}
+                    </div>
+                  )}
                 </div>
-                {roundResult && rightExplanation && (
-                  <div className="flex flex-col gap-2">
-                    <WhyButton
-                      label="Why?"
-                      expanded={showWhyB}
-                      onToggle={() => setShowWhyB((v) => !v)}
-                    />
-                    {showWhyB && <WhyTooltip text={rightExplanation} />}
-                  </div>
-                )}
               </div>
             </div>
 
-            {mode === "timed" ? (
-              <BinaryChoiceScale
-                disabled={timedRemainingMs <= 0}
-                onSelect={handleTimedBinaryChoice}
-              />
-            ) : mode === "marathon" ? (
-              <BinaryChoiceScale
-                disabled={marathonRemainingMs <= 0}
-                onSelect={handleMarathonBinaryChoice}
-              />
-            ) : (
-              <ConfidenceScale
-                disabled={!!roundResult}
-                selected={selectedConfidence}
-                onSelect={handleConfidenceSelect}
-              />
-            )}
-
-            {/* Streak strip during play */}
-            <div className="mt-4 flex items-center gap-6 rounded-none border border-white/10 bg-neutral-900/50 px-4 py-3 text-sm">
+            {/* Sticky bottom controls */}
+            <div className="sticky bottom-0 flex flex-col gap-3 bg-black pb-4 pt-3">
               {mode === "timed" ? (
-                <>
-                  <span className="text-neutral-400">Score</span>
-                  <span className="font-semibold text-white">{timedCorrectCount}</span>
-                  <span className="text-neutral-500">|</span>
-                  <span className="text-neutral-400">Answered</span>
-                  <span className="font-semibold">{timedAnsweredCount}</span>
-                </>
+                <BinaryChoiceScale
+                  disabled={timedRemainingMs <= 0}
+                  onSelect={handleTimedBinaryChoice}
+                />
               ) : mode === "marathon" ? (
-                <>
-                  <span className="text-neutral-400">Streak</span>
-                  <span className="font-semibold text-white">{marathonStreak}</span>
-                  <span className="text-neutral-500">|</span>
-                  <span className="text-neutral-400">Answered</span>
-                  <span className="font-semibold">{marathonAnsweredCount}</span>
-                </>
+                <BinaryChoiceScale
+                  disabled={marathonRemainingMs <= 0}
+                  onSelect={handleMarathonBinaryChoice}
+                />
               ) : (
-                <>
-                  <span className="text-neutral-400">Current streak</span>
-                  <span className="font-semibold text-white">{streak}</span>
-                  <span className="text-neutral-500">|</span>
-                  <span className="text-neutral-400">Best</span>
-                  <span className="font-semibold">{bestStreak}</span>
-                </>
+                <ConfidenceScale
+                  disabled={!!roundResult}
+                  selected={selectedConfidence}
+                  onSelect={handleConfidenceSelect}
+                />
               )}
+
+              {/* Streak strip */}
+              <div className="flex items-center gap-6 rounded-none border border-white/10 bg-neutral-900/50 px-4 py-3 text-sm">
+                {mode === "timed" ? (
+                  <>
+                    <span className="text-neutral-400">Score</span>
+                    <span className="font-semibold text-white">{timedCorrectCount}</span>
+                    <span className="text-neutral-500">|</span>
+                    <span className="text-neutral-400">Answered</span>
+                    <span className="font-semibold">{timedAnsweredCount}</span>
+                  </>
+                ) : mode === "marathon" ? (
+                  <>
+                    <span className="text-neutral-400">Streak</span>
+                    <span className="font-semibold text-white">{marathonStreak}</span>
+                    <span className="text-neutral-500">|</span>
+                    <span className="text-neutral-400">Answered</span>
+                    <span className="font-semibold">{marathonAnsweredCount}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-neutral-400">Current streak</span>
+                    <span className="font-semibold text-white">{streak}</span>
+                    <span className="text-neutral-500">|</span>
+                    <span className="text-neutral-400">Best</span>
+                    <span className="font-semibold">{bestStreak}</span>
+                  </>
+                )}
+              </div>
             </div>
           </section>
         )}
