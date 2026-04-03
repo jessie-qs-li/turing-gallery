@@ -1484,12 +1484,10 @@ export default function Home() {
                   Identify the human-made audio clip. A = Clip 1, B = Clip 2. Select your confidence:
                 </p>
               </div>
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
-                Time:{" "}
-                <span className="tabular-nums text-neutral-200">
-                  {elapsedSeconds.toFixed(1)}s
-                </span>
-              </p>
+              <div className="flex flex-col items-end rounded-none border border-white/20 bg-neutral-900/60 px-4 py-2 tabular-nums text-white">
+                <span className="text-xs font-semibold uppercase tracking-widest opacity-60">Time</span>
+                <span className="text-2xl font-bold leading-tight">{elapsedSeconds.toFixed(1)}s</span>
+              </div>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
@@ -1566,12 +1564,10 @@ export default function Home() {
                   ?
                 </p>
               </div>
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
-                Time:{" "}
-                <span className="tabular-nums text-neutral-200">
-                  {elapsedSeconds.toFixed(1)}s
-                </span>
-              </p>
+              <div className="flex flex-col items-end rounded-none border border-white/20 bg-neutral-900/60 px-4 py-2 tabular-nums text-white">
+                <span className="text-xs font-semibold uppercase tracking-widest opacity-60">Time</span>
+                <span className="text-2xl font-bold leading-tight">{elapsedSeconds.toFixed(1)}s</span>
+              </div>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
