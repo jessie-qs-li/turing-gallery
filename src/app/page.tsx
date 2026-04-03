@@ -1354,16 +1354,6 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-                  {roundResult && leftExplanation && (
-                    <div className="flex flex-col gap-2">
-                      <WhyButton
-                        label="Why?"
-                        expanded={showWhyA}
-                        onToggle={() => setShowWhyA((v) => !v)}
-                      />
-                      {showWhyA && <WhyTooltip text={leftExplanation} />}
-                    </div>
-                  )}
                 </div>
 
                 {/* Option B card */}
@@ -1392,16 +1382,6 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-                  {roundResult && rightExplanation && (
-                    <div className="flex flex-col gap-2">
-                      <WhyButton
-                        label="Why?"
-                        expanded={showWhyB}
-                        onToggle={() => setShowWhyB((v) => !v)}
-                      />
-                      {showWhyB && <WhyTooltip text={rightExplanation} />}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -1723,20 +1703,6 @@ export default function Home() {
               <p className="text-sm text-neutral-400">
                 You answered in <span className="font-medium text-neutral-300">{(lastResponseTimeMs / 1000).toFixed(1)}s</span>
               </p>
-            )}
-            <button
-              type="button"
-              onClick={() => setShowWhyOnGameOver((v) => !v)}
-              className="inline-flex items-center gap-1.5 rounded-none border border-white/30 bg-white/10 px-4 py-2 text-sm font-medium text-neutral-100 transition hover:bg-white/15"
-            >
-              Why?
-              <span className="text-neutral-200">{showWhyOnGameOver ? "−" : "+"}</span>
-            </button>
-            {showWhyOnGameOver && (
-              <div className="w-full max-w-md rounded-none border border-white/15 bg-neutral-950/90 p-4 text-left text-sm text-neutral-200">
-                <p className="font-medium text-neutral-200/90">Explanation for AI artifacts</p>
-                <p className="mt-2 leading-relaxed">{currentPairExplanation}</p>
-              </div>
             )}
             <div className="w-full max-w-md text-left">
               <label htmlFor="tip-off-gameover" className="block text-sm text-neutral-400">
