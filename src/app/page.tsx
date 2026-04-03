@@ -1487,9 +1487,7 @@ export default function Home() {
                   <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-400">
                     Clip 1 (A)
                   </div>
-                  <div className="mb-3 flex h-24 items-center justify-center rounded-none bg-neutral-800/80 text-xs text-neutral-500">
-                    Audio visualizer placeholder
-                  </div>
+
                   <AudioClip30s src={leftMusicUrl} />
                 </div>
                 {roundResult && leftMusicExplanation && (
@@ -1509,9 +1507,7 @@ export default function Home() {
                   <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-400">
                     Clip 2 (B)
                   </div>
-                  <div className="mb-3 flex h-24 items-center justify-center rounded-none bg-neutral-800/80 text-xs text-neutral-500">
-                    Audio visualizer placeholder
-                  </div>
+
                   <AudioClip30s src={rightMusicUrl} />
                 </div>
                 {roundResult && rightMusicExplanation && (
