@@ -1890,9 +1890,6 @@ function ConfidenceScale({
 }) {
   return (
     <div className="rounded-none border border-white/15 bg-neutral-900/50 p-4">
-      <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-neutral-400">
-        6-point scale
-      </p>
       <div className="flex w-full min-w-0 flex-nowrap gap-1.5 sm:gap-2">
         {CONFIDENCE_OPTIONS.map((option) => (
           <button
