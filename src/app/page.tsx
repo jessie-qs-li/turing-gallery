@@ -629,6 +629,20 @@ type ResponseTimeRecord = {
 const NORMAL_MODE_BANK = NORMAL_LITERATURE_PAIRS.slice(0, 8);
 const TIMED_MARATHON_BANK = NORMAL_LITERATURE_PAIRS.slice(8);
 
+// Serial queue — prevents concurrent requests to Apps Script which can cause dropped rows
+const trackQueue: Array<() => Promise<void>> = [];
+let trackQueueRunning = false;
+
+async function drainTrackQueue() {
+  if (trackQueueRunning) return;
+  trackQueueRunning = true;
+  while (trackQueue.length > 0) {
+    const task = trackQueue.shift()!;
+    await task().catch(() => {});
+  }
+  trackQueueRunning = false;
+}
+
 function trackTrial(data: {
   sessionId: string;
   module: GameModule;
@@ -641,13 +655,14 @@ function trackTrial(data: {
   responseTimeMs: number;
   gameMode: GameMode;
 }) {
-  fetch("/api/track", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  }).catch(() => {
-    // fire-and-forget: don't block the UI on logging failures
-  });
+  trackQueue.push(() =>
+    fetch("/api/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    }).then(() => {})
+  );
+  drainTrackQueue();
 }
 
 export default function Home() {
