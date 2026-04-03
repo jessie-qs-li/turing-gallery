@@ -967,11 +967,11 @@ export default function Home() {
         setBestStreak((best) => Math.max(best, next));
         return next;
       });
-      setView("correct");
+      if (module !== "literature") setView("correct");
     } else {
       setRoundResult("wrong");
       setFooledCount((prev) => prev + 1);
-      setView("gameover");
+      if (module !== "literature") setView("gameover");
     }
   };
 
@@ -1015,8 +1015,7 @@ export default function Home() {
     if (pickedHuman) {
       setTimedCorrectCount((prev) => prev + 1);
     }
-
-    goToNextLiteratureQuestion();
+    setRoundResult(pickedHuman ? "correct" : "wrong");
   };
 
   const handleMarathonBinaryChoice = (side: ChoiceSide) => {
@@ -1059,7 +1058,7 @@ export default function Home() {
 
     if (!pickedHuman) {
       setMarathonEndReason("wrong");
-      setView("marathon-complete");
+      setRoundResult("wrong");
       return;
     }
 
@@ -1068,7 +1067,19 @@ export default function Home() {
     const bonusMs = Math.max(0, (60 - 3 * marathonAnsweredCount) * 1000);
     setMarathonStreak(nextStreak);
     setMarathonRemainingMs((prev) => prev + bonusMs);
-    goToNextLiteratureQuestion();
+    setRoundResult("correct");
+  };
+
+  const handleNextAfterReveal = () => {
+    if (mode === "marathon" && roundResult === "wrong") {
+      setView("marathon-complete");
+      return;
+    }
+    if (mode === "normal") {
+      goToNextRound();
+    } else {
+      goToNextLiteratureQuestion();
+    }
   };
 
   const goToNextRound = () => {
@@ -1317,14 +1328,31 @@ export default function Home() {
             {/* Scrollable text panels */}
             <div className="flex-1 overflow-y-auto pb-4" style={{ minHeight: 0 }}>
               <div className="grid gap-6 md:grid-cols-2">
+                {/* Option A card */}
                 <div className="flex flex-col gap-3">
-                  <div className="rounded-none border border-white/20 bg-neutral-200 p-5 shadow-lg">
+                  <div className={`rounded-none border p-5 shadow-lg ${
+                    roundResult
+                      ? isLeftHuman
+                        ? "border-emerald-500/60 bg-neutral-200"
+                        : "border-neutral-400/40 bg-neutral-200"
+                      : "border-white/20 bg-neutral-200"
+                  }`}>
                     <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-600">
                       Option A
                     </div>
                     <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-900">
                       {leftText}
                     </p>
+                    {roundResult && (
+                      <div className={`mt-4 border-t pt-3 ${isLeftHuman ? "border-emerald-500/30" : "border-neutral-400/30"}`}>
+                        <p className={`text-sm font-semibold ${isLeftHuman ? "text-emerald-700" : "text-neutral-500"}`}>
+                          {isLeftHuman ? "Written by a human" : "Written by A.I."}
+                        </p>
+                        <p className="mt-0.5 text-xs text-neutral-500">
+                          {isLeftHuman ? literaturePair.humanSource : literaturePair.aiModel}
+                        </p>
+                      </div>
+                    )}
                   </div>
                   {roundResult && leftExplanation && (
                     <div className="flex flex-col gap-2">
@@ -1338,14 +1366,31 @@ export default function Home() {
                   )}
                 </div>
 
+                {/* Option B card */}
                 <div className="flex flex-col gap-3">
-                  <div className="rounded-none border border-white/20 bg-neutral-200 p-5 shadow-lg">
+                  <div className={`rounded-none border p-5 shadow-lg ${
+                    roundResult
+                      ? isRightHuman
+                        ? "border-emerald-500/60 bg-neutral-200"
+                        : "border-neutral-400/40 bg-neutral-200"
+                      : "border-white/20 bg-neutral-200"
+                  }`}>
                     <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-600">
                       Option B
                     </div>
                     <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-900">
                       {rightText}
                     </p>
+                    {roundResult && (
+                      <div className={`mt-4 border-t pt-3 ${isRightHuman ? "border-emerald-500/30" : "border-neutral-400/30"}`}>
+                        <p className={`text-sm font-semibold ${isRightHuman ? "text-emerald-700" : "text-neutral-500"}`}>
+                          {isRightHuman ? "Written by a human" : "Written by A.I."}
+                        </p>
+                        <p className="mt-0.5 text-xs text-neutral-500">
+                          {isRightHuman ? literaturePair.humanSource : literaturePair.aiModel}
+                        </p>
+                      </div>
+                    )}
                   </div>
                   {roundResult && rightExplanation && (
                     <div className="flex flex-col gap-2">
@@ -1363,22 +1408,41 @@ export default function Home() {
 
             {/* Sticky bottom controls */}
             <div className="sticky bottom-0 flex flex-col gap-3 bg-black pb-4 pt-3">
-              {mode === "timed" ? (
-                <BinaryChoiceScale
-                  disabled={timedRemainingMs <= 0}
-                  onSelect={handleTimedBinaryChoice}
-                />
-              ) : mode === "marathon" ? (
-                <BinaryChoiceScale
-                  disabled={marathonRemainingMs <= 0}
-                  onSelect={handleMarathonBinaryChoice}
-                />
-              ) : (
-                <ConfidenceScale
-                  disabled={!!roundResult}
-                  selected={selectedConfidence}
-                  onSelect={handleConfidenceSelect}
-                />
+              {!roundResult && (
+                <>
+                  {mode === "timed" ? (
+                    <BinaryChoiceScale
+                      disabled={timedRemainingMs <= 0}
+                      onSelect={handleTimedBinaryChoice}
+                    />
+                  ) : mode === "marathon" ? (
+                    <BinaryChoiceScale
+                      disabled={marathonRemainingMs <= 0}
+                      onSelect={handleMarathonBinaryChoice}
+                    />
+                  ) : (
+                    <ConfidenceScale
+                      disabled={false}
+                      selected={selectedConfidence}
+                      onSelect={handleConfidenceSelect}
+                    />
+                  )}
+                </>
+              )}
+
+              {roundResult && (
+                <div className="flex items-center justify-between gap-4">
+                  <p className={`text-base font-semibold ${roundResult === "correct" ? "text-emerald-400" : "text-red-400"}`}>
+                    {roundResult === "correct" ? "Correct" : "Incorrect"}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleNextAfterReveal}
+                    className="rounded-none bg-white px-6 py-2.5 text-sm font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200"
+                  >
+                    {mode === "marathon" && roundResult === "wrong" ? "See results" : "Next"}
+                  </button>
+                </div>
               )}
 
               {/* Streak strip */}
