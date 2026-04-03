@@ -1316,7 +1316,7 @@ export default function Home() {
                 )}
               </div>
               {(mode === "timed" || mode === "marathon") ? (
-                <div className={`flex flex-col items-end rounded-none border px-4 py-2 tabular-nums transition-colors ${
+                <div className={`flex w-24 flex-col items-end rounded-none border px-4 py-2 tabular-nums transition-colors ${
                   (mode === "timed" ? timedRemainingMs : marathonRemainingMs) < 10000
                     ? "border-red-500/60 bg-red-950/40 text-red-400"
                     : (mode === "timed" ? timedRemainingMs : marathonRemainingMs) < 30000
@@ -1329,7 +1329,7 @@ export default function Home() {
                   </span>
                 </div>
               ) : (
-                <div className="flex flex-col items-end rounded-none border border-white/20 bg-neutral-900/60 px-4 py-2 tabular-nums text-white">
+                <div className="flex w-24 flex-col items-end rounded-none border border-white/20 bg-neutral-900/60 px-4 py-2 tabular-nums text-white">
                   <span className="text-xs font-semibold uppercase tracking-widest opacity-60">Time</span>
                   <span className="text-2xl font-bold leading-tight">{Math.floor(elapsedSeconds)}s</span>
                 </div>
@@ -1484,7 +1484,7 @@ export default function Home() {
                   Identify the human-made audio clip. A = Clip 1, B = Clip 2. Select your confidence:
                 </p>
               </div>
-              <div className="flex flex-col items-end rounded-none border border-white/20 bg-neutral-900/60 px-4 py-2 tabular-nums text-white">
+              <div className="flex w-24 flex-col items-end rounded-none border border-white/20 bg-neutral-900/60 px-4 py-2 tabular-nums text-white">
                 <span className="text-xs font-semibold uppercase tracking-widest opacity-60">Time</span>
                 <span className="text-2xl font-bold leading-tight">{Math.floor(elapsedSeconds)}s</span>
               </div>
@@ -1564,7 +1564,7 @@ export default function Home() {
                   ?
                 </p>
               </div>
-              <div className="flex flex-col items-end rounded-none border border-white/20 bg-neutral-900/60 px-4 py-2 tabular-nums text-white">
+              <div className="flex w-24 flex-col items-end rounded-none border border-white/20 bg-neutral-900/60 px-4 py-2 tabular-nums text-white">
                 <span className="text-xs font-semibold uppercase tracking-widest opacity-60">Time</span>
                 <span className="text-2xl font-bold leading-tight">{Math.floor(elapsedSeconds)}s</span>
               </div>
