@@ -1315,20 +1315,25 @@ export default function Home() {
                   </p>
                 )}
               </div>
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
-                {mode === "timed"
-                  ? "Time Left:"
-                  : mode === "marathon"
-                  ? "Time Left:"
-                  : "Time:"}{" "}
-                <span className="tabular-nums text-neutral-200">
-                  {mode === "timed"
-                    ? formatTime(timedRemainingMs / 1000)
-                    : mode === "marathon"
-                    ? formatTime(marathonRemainingMs / 1000)
-                    : `${elapsedSeconds.toFixed(1)}s`}
-                </span>
-              </p>
+              {(mode === "timed" || mode === "marathon") ? (
+                <div className={`flex flex-col items-end rounded-none border px-4 py-2 tabular-nums transition-colors ${
+                  (mode === "timed" ? timedRemainingMs : marathonRemainingMs) < 10000
+                    ? "border-red-500/60 bg-red-950/40 text-red-400"
+                    : (mode === "timed" ? timedRemainingMs : marathonRemainingMs) < 30000
+                    ? "border-amber-500/60 bg-amber-950/30 text-amber-300"
+                    : "border-white/20 bg-neutral-900/60 text-white"
+                }`}>
+                  <span className="text-xs font-semibold uppercase tracking-widest opacity-60">Time Left</span>
+                  <span className="text-2xl font-bold leading-tight">
+                    {mode === "timed" ? formatTime(timedRemainingMs / 1000) : formatTime(marathonRemainingMs / 1000)}
+                  </span>
+                </div>
+              ) : (
+                <p className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
+                  Time:{" "}
+                  <span className="tabular-nums text-neutral-200">{elapsedSeconds.toFixed(1)}s</span>
+                </p>
+              )}
             </div>
 
             {/* Scrollable text panels */}
