@@ -1329,10 +1329,10 @@ export default function Home() {
                   </span>
                 </div>
               ) : (
-                <p className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
-                  Time:{" "}
-                  <span className="tabular-nums text-neutral-200">{Math.floor(elapsedSeconds)}s</span>
-                </p>
+                <div className="flex flex-col items-end rounded-none border border-white/20 bg-neutral-900/60 px-4 py-2 tabular-nums text-white">
+                  <span className="text-xs font-semibold uppercase tracking-widest opacity-60">Time</span>
+                  <span className="text-2xl font-bold leading-tight">{Math.floor(elapsedSeconds)}s</span>
+                </div>
               )}
             </div>
 
