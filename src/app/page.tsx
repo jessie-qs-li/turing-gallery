@@ -1074,6 +1074,10 @@ export default function Home() {
   const goToNextRound = () => {
     if (module === "literature") {
       const bank = mode === "normal" ? NORMAL_MODE_BANK : TIMED_MARATHON_BANK;
+      if (mode === "normal" && currentIndex >= bank.length - 1) {
+        setView("complete");
+        return;
+      }
       const nextIndex =
         bank.length > 1 ? (currentIndex + 1) % bank.length : currentIndex;
       setCurrentIndex(nextIndex);
@@ -1694,6 +1698,27 @@ export default function Home() {
         )}
 
         {/* ----- VIEW: Challenge Complete (Visual Art: all 8; Music: all 5) ----- */}
+        {view === "complete" && module === "literature" && (
+          <section className="flex flex-1 flex-col items-center justify-center gap-6 py-12 text-center">
+            <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              You finished the Literature challenge!
+            </h2>
+            <p className="max-w-md text-sm text-neutral-300 sm:text-base">
+              You made it through all {NORMAL_MODE_BANK.length} questions. Your confidence ratings and response times help us understand how well people can tell human writing from AI-generated text.
+            </p>
+            <p className="rounded-none border border-white/25 bg-neutral-900/60 px-6 py-3 text-lg">
+              Final Streak: <span className="font-bold text-white">{streak}</span>
+            </p>
+            <button
+              type="button"
+              onClick={resetGame}
+              className="rounded-none bg-white px-8 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200"
+            >
+              Back to challenges
+            </button>
+          </section>
+        )}
+
         {view === "complete" && module === "art" && (
           <section className="flex flex-1 flex-col items-center justify-center gap-6 py-12 text-center">
             <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
