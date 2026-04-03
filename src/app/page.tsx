@@ -1171,17 +1171,23 @@ export default function Home() {
       <main className={`mx-auto max-w-5xl flex flex-col px-4 py-8 sm:px-6 lg:px-10${view === "literature" ? " h-full" : " min-h-screen"}`}>
         {/* Global header: title only on choose; title + challenge name on game screens */}
         <header className="border-b border-white/10 pb-6">
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            <button
-              type="button"
-              onClick={resetGame}
-              className="border-0 bg-transparent p-0 text-left font-inherit text-inherit cursor-pointer"
-            >
-              <SpecialText className="text-2xl sm:text-3xl font-semibold tracking-tight">
-                The Turing Gallery
-              </SpecialText>
-            </button>
-          </h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              <button
+                type="button"
+                onClick={resetGame}
+                className="border-0 bg-transparent p-0 text-left font-inherit text-inherit cursor-pointer"
+              >
+                <SpecialText className="text-2xl sm:text-3xl font-semibold tracking-tight">
+                  The Turing Gallery
+                </SpecialText>
+              </button>
+            </h1>
+            <nav className="flex items-center gap-4 pt-1 text-sm text-neutral-400">
+              <a href="/about" className="transition hover:text-neutral-200">About</a>
+              <a href="/journal" className="transition hover:text-neutral-200">Journal</a>
+            </nav>
+          </div>
           <p className="mt-3 max-w-2xl text-sm text-neutral-300 sm:text-base">
             <span className="block text-base italic sm:text-lg">
               When AI imitates the masters, can you tell the difference?
