@@ -1331,7 +1331,7 @@ export default function Home() {
               ) : (
                 <p className="text-xs font-medium uppercase tracking-[0.18em] text-neutral-400">
                   Time:{" "}
-                  <span className="tabular-nums text-neutral-200">{elapsedSeconds.toFixed(1)}s</span>
+                  <span className="tabular-nums text-neutral-200">{Math.floor(elapsedSeconds)}s</span>
                 </p>
               )}
             </div>
@@ -1486,7 +1486,7 @@ export default function Home() {
               </div>
               <div className="flex flex-col items-end rounded-none border border-white/20 bg-neutral-900/60 px-4 py-2 tabular-nums text-white">
                 <span className="text-xs font-semibold uppercase tracking-widest opacity-60">Time</span>
-                <span className="text-2xl font-bold leading-tight">{elapsedSeconds.toFixed(1)}s</span>
+                <span className="text-2xl font-bold leading-tight">{Math.floor(elapsedSeconds)}s</span>
               </div>
             </div>
 
@@ -1566,7 +1566,7 @@ export default function Home() {
               </div>
               <div className="flex flex-col items-end rounded-none border border-white/20 bg-neutral-900/60 px-4 py-2 tabular-nums text-white">
                 <span className="text-xs font-semibold uppercase tracking-widest opacity-60">Time</span>
-                <span className="text-2xl font-bold leading-tight">{elapsedSeconds.toFixed(1)}s</span>
+                <span className="text-2xl font-bold leading-tight">{Math.floor(elapsedSeconds)}s</span>
               </div>
             </div>
 
@@ -1660,7 +1660,7 @@ export default function Home() {
             </p>
             {lastResponseTimeMs != null && (
               <p className="text-sm text-neutral-400">
-                You answered in <span className="font-medium text-neutral-300">{(lastResponseTimeMs / 1000).toFixed(1)}s</span>
+                You answered in <span className="font-medium text-neutral-300">{Math.floor(lastResponseTimeMs / 1000)}s</span>
               </p>
             )}
             <p className="rounded-none border border-white/25 bg-neutral-900/60 px-6 py-3 text-lg">
@@ -1704,7 +1704,7 @@ export default function Home() {
             </p>
             {lastResponseTimeMs != null && (
               <p className="text-sm text-neutral-400">
-                You answered in <span className="font-medium text-neutral-300">{(lastResponseTimeMs / 1000).toFixed(1)}s</span>
+                You answered in <span className="font-medium text-neutral-300">{Math.floor(lastResponseTimeMs / 1000)}s</span>
               </p>
             )}
             <div className="w-full max-w-md text-left">
