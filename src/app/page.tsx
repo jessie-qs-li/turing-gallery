@@ -594,6 +594,7 @@ type GameView =
   | "choose"
   | "literature-mode"
   | "literature"
+  | "music-mode"
   | "music"
   | "art-mode"
   | "art"
@@ -899,15 +900,25 @@ export default function Home() {
 
   const handleStartMusic = () => {
     setModule("music");
+    setView("music-mode");
+    setRoundResult(null);
+    setSelectedSide(null);
+    setSelectedConfidence(null);
+    setShowWhyA(false);
+    setShowWhyB(false);
+    setRoundStartedAt(null);
+  };
+
+  const handlePickMusicMode = () => {
     setCurrentIndex(0);
     setHumanOnLeft(Math.random() < 0.5);
-    setView("music");
     setRoundResult(null);
     setSelectedSide(null);
     setSelectedConfidence(null);
     setShowWhyA(false);
     setShowWhyB(false);
     setRoundStartedAt(Date.now());
+    setView("music");
   };
 
   const handleStartArt = () => {
@@ -1480,6 +1491,23 @@ export default function Home() {
                   </>
                 )}
               </div>
+            </div>
+          </section>
+        )}
+
+        {/* ----- VIEW: Music Mode Selection ----- */}
+        {view === "music-mode" && (
+          <section className="flex flex-1 flex-col gap-6 pt-10">
+            <h2 className="text-xl font-semibold text-neutral-100 sm:text-2xl">
+              Pick a Music Mode
+            </h2>
+            <div className="grid gap-4">
+              <ModeCard
+                title="Normal Mode"
+                description="Rate your confidence on a 6-point scale across all 5 composer pairs. No time pressure. Response time and confidence are logged for analysis."
+                cta="Play Normal Mode"
+                onClick={handlePickMusicMode}
+              />
             </div>
           </section>
         )}
