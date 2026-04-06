@@ -2084,9 +2084,6 @@ function BinaryChoiceScale({
 }) {
   return (
     <div className="rounded-none border border-white/15 bg-neutral-900/50 p-4">
-      <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-neutral-400">
-        Binary choice
-      </p>
       <div className="grid grid-cols-2 gap-2">
         <button
           type="button"
