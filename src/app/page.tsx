@@ -600,7 +600,8 @@ type GameView =
   | "gameover"
   | "complete"
   | "timed-complete"
-  | "marathon-complete";
+  | "marathon-complete"
+  | "review";
 type GameModule = "literature" | "music" | "art";
 type GameMode = "normal" | "timed" | "marathon";
 type ChoiceSide = "left" | "right";
@@ -624,6 +625,7 @@ type ResponseTimeRecord = {
   responseTimeMs: number;
   correct: boolean;
   confidenceOption: ConfidenceOption;
+  humanOnLeft: boolean;
 };
 
 const NORMAL_MODE_BANK = NORMAL_LITERATURE_PAIRS.slice(0, 8);
@@ -695,6 +697,7 @@ export default function Home() {
   const [marathonOrder, setMarathonOrder] = useState<number[]>([]);
   const [marathonOrderPosition, setMarathonOrderPosition] = useState(0);
   const [marathonEndReason, setMarathonEndReason] = useState<"timeout" | "wrong" | "depleted">("timeout");
+  const [prevView, setPrevView] = useState<GameView>("complete");
 
   const literatureBank = mode === "normal" ? NORMAL_MODE_BANK : TIMED_MARATHON_BANK;
   const currentLiteratureIndex =
@@ -937,6 +940,7 @@ export default function Home() {
         responseTimeMs,
         correct: pickedHuman,
         confidenceOption: option,
+        humanOnLeft,
       })
     );
     setLastResponseTimeMs(responseTimeMs);
@@ -996,6 +1000,7 @@ export default function Home() {
         responseTimeMs,
         correct: pickedHuman,
         confidenceOption: side === "left" ? 1 : 6,
+        humanOnLeft,
       })
     );
     setLastResponseTimeMs(responseTimeMs);
@@ -1039,6 +1044,7 @@ export default function Home() {
         responseTimeMs,
         correct: pickedHuman,
         confidenceOption: side === "left" ? 1 : 6,
+        humanOnLeft,
       })
     );
     setLastResponseTimeMs(responseTimeMs);
@@ -1742,13 +1748,10 @@ export default function Home() {
             <p className="rounded-none border border-white/25 bg-neutral-900/60 px-6 py-3 text-lg">
               Final Streak: <span className="font-bold text-white">{streak}</span>
             </p>
-            <button
-              type="button"
-              onClick={resetGame}
-              className="rounded-none bg-white px-8 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200"
-            >
-              Back to challenges
-            </button>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => { setPrevView("complete"); setView("review"); }} className="rounded-none border border-white/30 bg-white/10 px-6 py-3 text-base font-semibold text-white transition hover:bg-white/20">Review answers</button>
+              <button type="button" onClick={resetGame} className="rounded-none bg-white px-6 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200">Back to challenges</button>
+            </div>
           </section>
         )}
 
@@ -1764,13 +1767,10 @@ export default function Home() {
             <p className="rounded-none border border-white/25 bg-neutral-900/60 px-6 py-3 text-lg">
               Final Streak: <span className="font-bold text-white">{streak}</span>
             </p>
-            <button
-              type="button"
-              onClick={resetGame}
-              className="rounded-none bg-white px-8 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200"
-            >
-              Back to challenges
-            </button>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => { setPrevView("complete"); setView("review"); }} className="rounded-none border border-white/30 bg-white/10 px-6 py-3 text-base font-semibold text-white transition hover:bg-white/20">Review answers</button>
+              <button type="button" onClick={resetGame} className="rounded-none bg-white px-6 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200">Back to challenges</button>
+            </div>
           </section>
         )}
 
@@ -1786,13 +1786,10 @@ export default function Home() {
             <p className="rounded-none border border-white/25 bg-neutral-900/60 px-6 py-3 text-lg">
               Final Streak: <span className="font-bold text-white">{streak}</span>
             </p>
-            <button
-              type="button"
-              onClick={resetGame}
-              className="rounded-none bg-white px-8 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200"
-            >
-              Back to challenges
-            </button>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => { setPrevView("complete"); setView("review"); }} className="rounded-none border border-white/30 bg-white/10 px-6 py-3 text-base font-semibold text-white transition hover:bg-white/20">Review answers</button>
+              <button type="button" onClick={resetGame} className="rounded-none bg-white px-6 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200">Back to challenges</button>
+            </div>
           </section>
         )}
 
@@ -1809,13 +1806,10 @@ export default function Home() {
               {" / "}
               {timedAnsweredCount}
             </p>
-            <button
-              type="button"
-              onClick={resetGame}
-              className="rounded-none bg-white px-8 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200"
-            >
-              Back to challenges
-            </button>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => { setPrevView("timed-complete"); setView("review"); }} className="rounded-none border border-white/30 bg-white/10 px-6 py-3 text-base font-semibold text-white transition hover:bg-white/20">Review answers</button>
+              <button type="button" onClick={resetGame} className="rounded-none bg-white px-6 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200">Back to challenges</button>
+            </div>
           </section>
         )}
 
@@ -1837,10 +1831,115 @@ export default function Home() {
             <p className="text-sm text-neutral-400">
               Questions answered: <span className="font-medium text-neutral-200">{marathonAnsweredCount}</span>
             </p>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => { setPrevView("marathon-complete"); setView("review"); }} className="rounded-none border border-white/30 bg-white/10 px-6 py-3 text-base font-semibold text-white transition hover:bg-white/20">Review answers</button>
+              <button type="button" onClick={resetGame} className="rounded-none bg-white px-6 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200">Back to challenges</button>
+            </div>
+          </section>
+        )}
+        {/* ----- VIEW: Review Answers ----- */}
+        {view === "review" && (
+          <section className="flex flex-1 flex-col gap-6 py-8">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold tracking-tight text-white">Review</h2>
+              <button
+                type="button"
+                onClick={() => setView(prevView)}
+                className="text-sm text-neutral-400 underline underline-offset-4 hover:text-neutral-200"
+              >
+                ← Back
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-8">
+              {responseTimes.map((record, i) => {
+                const isLit = record.module === "literature";
+                const isMusic = record.module === "music";
+                const isArt = record.module === "art";
+
+                const litBank = mode === "normal" ? NORMAL_MODE_BANK : TIMED_MARATHON_BANK;
+                const litPair = isLit ? litBank[record.roundIndex % litBank.length] : null;
+                const musicPairR = isMusic ? MUSIC_PAIRS[record.roundIndex % MUSIC_PAIRS.length] : null;
+                const artPairR = isArt ? VISUAL_ART_PAIRS[record.roundIndex % VISUAL_ART_PAIRS.length] : null;
+
+                const humanWasLeft = record.humanOnLeft;
+                const userPickedLeft = record.confidenceOption <= 3;
+                const userPickedHuman = (userPickedLeft && humanWasLeft) || (!userPickedLeft && !humanWasLeft);
+
+                return (
+                  <div key={i} className={`rounded-none border p-5 ${record.correct ? "border-emerald-500/40" : "border-red-500/30"}`}>
+                    <div className="mb-3 flex items-center justify-between gap-4">
+                      <span className={`text-xs font-semibold uppercase tracking-widest ${record.correct ? "text-emerald-400" : "text-red-400"}`}>
+                        {record.correct ? "Correct" : "Incorrect"} — Q{i + 1}
+                      </span>
+                      <span className="text-xs text-neutral-500">{Math.floor(record.responseTimeMs / 1000)}s · {CONFIDENCE_LABELS[record.confidenceOption]}</span>
+                    </div>
+
+                    {isLit && litPair && (
+                      <div className="grid gap-4 md:grid-cols-2">
+                        {[
+                          { label: "Option A", text: humanWasLeft ? litPair.humanExcerpt : litPair.aiExcerpt, isHuman: humanWasLeft, userPicked: userPickedLeft },
+                          { label: "Option B", text: humanWasLeft ? litPair.aiExcerpt : litPair.humanExcerpt, isHuman: !humanWasLeft, userPicked: !userPickedLeft },
+                        ].map((card) => (
+                          <div key={card.label} className={`rounded-none border p-4 ${card.isHuman ? "border-emerald-500/40 bg-neutral-100" : "border-neutral-300/40 bg-neutral-100"}`}>
+                            <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-neutral-500">
+                              {card.label}{card.userPicked ? " ← your pick" : ""}
+                            </p>
+                            <p className="text-xs leading-relaxed text-neutral-800 line-clamp-4">{card.text}</p>
+                            <p className={`mt-2 text-xs font-semibold ${card.isHuman ? "text-emerald-700" : "text-neutral-500"}`}>
+                              {card.isHuman ? `Human — ${litPair.humanSource}` : `A.I. — ${litPair.aiModel}`}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {isMusic && musicPairR && (
+                      <div className="grid gap-4 md:grid-cols-2">
+                        {[
+                          { label: "Clip A", isHuman: humanWasLeft, src: humanWasLeft ? `${MUSIC_BASE}/${encodeURI(musicPairR.humanFilename)}` : `${MUSIC_BASE}/${encodeURI(musicPairR.aiFilename)}`, userPicked: userPickedLeft },
+                          { label: "Clip B", isHuman: !humanWasLeft, src: humanWasLeft ? `${MUSIC_BASE}/${encodeURI(musicPairR.aiFilename)}` : `${MUSIC_BASE}/${encodeURI(musicPairR.humanFilename)}`, userPicked: !userPickedLeft },
+                        ].map((card) => (
+                          <div key={card.label} className={`rounded-none border p-4 ${card.isHuman ? "border-emerald-500/40" : "border-neutral-600/40"}`}>
+                            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-400">
+                              {card.label}{card.userPicked ? " ← your pick" : ""}
+                            </p>
+                            <audio controls src={card.src} className="w-full" />
+                            <p className={`mt-2 text-xs font-semibold ${card.isHuman ? "text-emerald-400" : "text-neutral-500"}`}>
+                              {card.isHuman ? `Human — ${musicPairR.composer}` : "A.I. generated"}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {isArt && artPairR && (
+                      <div className="grid gap-4 md:grid-cols-2">
+                        {[
+                          { label: "Image A", isHuman: humanWasLeft, filename: humanWasLeft ? artPairR.humanFilename : artPairR.aiFilename, userPicked: userPickedLeft },
+                          { label: "Image B", isHuman: !humanWasLeft, filename: humanWasLeft ? artPairR.aiFilename : artPairR.humanFilename, userPicked: !userPickedLeft },
+                        ].map((card) => (
+                          <div key={card.label} className={`rounded-none border p-4 ${card.isHuman ? "border-emerald-500/40" : "border-neutral-600/40"}`}>
+                            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-400">
+                              {card.label}{card.userPicked ? " ← your pick" : ""}
+                            </p>
+                            <img src={`${ART_BASE}/${encodeURI(card.filename)}`} alt={card.label} className="w-full object-cover" />
+                            <p className={`mt-2 text-xs font-semibold ${card.isHuman ? "text-emerald-400" : "text-neutral-500"}`}>
+                              {card.isHuman ? `Human — ${artPairR.humanArtist}` : "A.I. generated"}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
             <button
               type="button"
               onClick={resetGame}
-              className="rounded-none bg-white px-8 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200"
+              className="mt-4 self-start rounded-none bg-white px-6 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200"
             >
               Back to challenges
             </button>
