@@ -1201,7 +1201,7 @@ export default function Home() {
             {view === "choose" && (
               <span className="mt-1 block">
                 This interactive study challenges participants to distinguish real art from AI imitations modeled
-                after famous creators. Compare pairs of texts, videos, music, and visual art. Choose the human
+                after famous creators. Compare pairs of texts, music, and visual art. Choose the human
                 work to help us measure how accurately and quickly we can detect AI-generated creativity.
               </span>
             )}
@@ -1236,12 +1236,7 @@ export default function Home() {
                 cta="Start Literature Challenge"
                 onClick={handleStartLiterature}
               />
-              <ChallengeCard
-                title="Film"
-                description="Explore cinematic creations. Identify the subtle differences between human and AI-made films."
-                cta="Start Film Challenge"
-                disabled
-              />
+
               <ChallengeCard
                 title="Visual Art"
                 description="Study paintings and illustrations. Can you tell human-made art from AI-generated images?"
