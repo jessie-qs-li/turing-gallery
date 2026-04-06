@@ -595,6 +595,7 @@ type GameView =
   | "literature-mode"
   | "literature"
   | "music"
+  | "art-mode"
   | "art"
   | "correct"
   | "gameover"
@@ -911,15 +912,29 @@ export default function Home() {
 
   const handleStartArt = () => {
     setModule("art");
-    setCurrentIndex(0);
-    setHumanOnLeft(Math.random() < 0.5);
-    setView("art");
+    setView("art-mode");
     setRoundResult(null);
     setSelectedSide(null);
     setSelectedConfidence(null);
     setShowWhyA(false);
     setShowWhyB(false);
-    setRoundStartedAt(Date.now());
+    setRoundStartedAt(null);
+  };
+
+  const handlePickArtMode = (pickedMode: GameMode) => {
+    setMode(pickedMode);
+    if (pickedMode === "normal") {
+      setCurrentIndex(0);
+      setHumanOnLeft(Math.random() < 0.5);
+      setRoundResult(null);
+      setSelectedSide(null);
+      setSelectedConfidence(null);
+      setShowWhyA(false);
+      setShowWhyB(false);
+      setRoundStartedAt(Date.now());
+      setView("art");
+    }
+    // timed and marathon: placeholders — no action yet
   };
 
   const handleConfidenceSelect = (option: ConfidenceOption) => {
@@ -1549,6 +1564,35 @@ export default function Home() {
           </section>
         )}
 
+        {/* ----- VIEW: Visual Art Mode Selection ----- */}
+        {view === "art-mode" && (
+          <section className="flex flex-1 flex-col gap-6 pt-10">
+            <h2 className="text-xl font-semibold text-neutral-100 sm:text-2xl">
+              Pick a Visual Art Mode
+            </h2>
+            <div className="grid gap-4">
+              <ModeCard
+                title="Normal Mode"
+                description="Rate your confidence on a 6-point scale across all 8 paintings and illustrations. No time pressure. Response time and confidence are logged for analysis."
+                cta="Play Normal Mode"
+                onClick={() => handlePickArtMode("normal")}
+              />
+              <ModeCard
+                title="Timed Mode"
+                description="Coming soon."
+                cta="Play Timed Mode"
+                disabled
+              />
+              <ModeCard
+                title="Marathon Mode"
+                description="Coming soon."
+                cta="Play Marathon Mode"
+                disabled
+              />
+            </div>
+          </section>
+        )}
+
         {/* ----- VIEW: Visual Art Challenge (Image A / Image B, 6-point scale) ----- */}
         {view === "art" && (
           <section className="flex flex-1 flex-col gap-6 pt-6">
@@ -1985,20 +2029,23 @@ function ModeCard({
   description,
   cta,
   onClick,
+  disabled = false,
 }: {
   title: string;
   description: string;
   cta: string;
-  onClick: () => void;
+  onClick?: () => void;
+  disabled?: boolean;
 }) {
   return (
-    <div className="rounded-none border border-white/15 bg-neutral-900/60 p-6 shadow-xl">
+    <div className={`rounded-none border border-white/15 bg-neutral-900/60 p-6 shadow-xl ${disabled ? "opacity-50" : ""}`}>
       <h3 className="text-lg font-semibold text-neutral-100">{title}</h3>
       <p className="mt-3 text-sm leading-relaxed text-neutral-300">{description}</p>
       <button
         type="button"
         onClick={onClick}
-        className="mt-5 rounded-none bg-white px-5 py-2.5 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-200"
+        disabled={disabled}
+        className="mt-5 rounded-none bg-white px-5 py-2.5 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {cta}
       </button>
