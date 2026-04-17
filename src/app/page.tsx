@@ -1077,11 +1077,9 @@ export default function Home() {
         setBestStreak((best) => Math.max(best, next));
         return next;
       });
-      if (module === "art" && mode === "normal") setView("correct");
     } else {
       setRoundResult("wrong");
       setFooledCount((prev) => prev + 1);
-      if (module === "art" && mode === "normal") setView("gameover");
     }
   };
 
@@ -1831,7 +1829,7 @@ export default function Home() {
                       className="object-contain"
                     />
                   </div>
-                  {roundResult && mode !== "normal" && (
+                  {roundResult && (
                     <div className={`mt-3 border-t pt-3 ${humanOnLeft ? "border-emerald-500/30" : "border-neutral-400/30"}`}>
                       <p className={`text-sm font-semibold ${humanOnLeft ? "text-emerald-400" : "text-neutral-500"}`}>
                         {humanOnLeft ? `Human — ${artPair.humanArtist}` : "A.I. generated"}
@@ -1861,7 +1859,7 @@ export default function Home() {
                       className="object-contain"
                     />
                   </div>
-                  {roundResult && mode !== "normal" && (
+                  {roundResult && (
                     <div className={`mt-3 border-t pt-3 ${!humanOnLeft ? "border-emerald-500/30" : "border-neutral-400/30"}`}>
                       <p className={`text-sm font-semibold ${!humanOnLeft ? "text-emerald-400" : "text-neutral-500"}`}>
                         {!humanOnLeft ? `Human — ${artPair.humanArtist}` : "A.I. generated"}
@@ -1874,20 +1872,51 @@ export default function Home() {
 
             {/* Sticky bottom for timed/marathon inline reveal; normal mode confidence scale stays in flow */}
             {mode === "normal" ? (
-              <>
-                <ConfidenceScale
-                  disabled={!!roundResult}
-                  selected={selectedConfidence}
-                  onSelect={handleConfidenceSelect}
-                />
-                <div className="mt-4 flex items-center gap-6 rounded-none border border-white/10 bg-neutral-900/50 px-4 py-3 text-sm">
+              <div className="sticky bottom-0 flex flex-col gap-3 bg-black pb-4 pt-3">
+                {!roundResult && (
+                  <ConfidenceScale
+                    disabled={false}
+                    selected={selectedConfidence}
+                    onSelect={handleConfidenceSelect}
+                  />
+                )}
+                {roundResult && (
+                  <>
+                    <div className="flex items-center justify-between gap-4">
+                      <p className={`text-base font-semibold ${roundResult === "correct" ? "text-emerald-400" : "text-red-400"}`}>
+                        {roundResult === "correct" ? "Correct" : "Incorrect"}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={goToNextRound}
+                        className="rounded-none bg-white px-6 py-2.5 text-sm font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200"
+                      >
+                        Next
+                      </button>
+                    </div>
+                    <div>
+                      <label htmlFor="tip-off-art-normal" className="block text-sm text-neutral-400">
+                        In 1–2 words/phrases, what tipped you off? <span className="text-neutral-500">(optional)</span>
+                      </label>
+                      <input
+                        id="tip-off-art-normal"
+                        type="text"
+                        value={tipOffResponse}
+                        onChange={(e) => setTipOffResponse(e.target.value)}
+                        placeholder="e.g. brushwork, composition..."
+                        className="mt-1.5 w-full rounded-none border border-white/20 bg-neutral-800/80 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-white/50 focus:outline-none focus:ring-1 focus:ring-white/50"
+                      />
+                    </div>
+                  </>
+                )}
+                <div className="flex items-center gap-6 rounded-none border border-white/10 bg-neutral-900/50 px-4 py-3 text-sm">
                   <span className="text-neutral-400">Current streak</span>
                   <span className="font-semibold text-white">{streak}</span>
                   <span className="text-neutral-500">|</span>
                   <span className="text-neutral-400">Best</span>
                   <span className="font-semibold">{bestStreak}</span>
                 </div>
-              </>
+              </div>
             ) : (
               <div className="sticky bottom-0 flex flex-col gap-3 bg-black pb-4 pt-3">
                 {!roundResult && (
