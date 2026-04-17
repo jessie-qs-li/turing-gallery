@@ -1894,19 +1894,6 @@ export default function Home() {
                         Next
                       </button>
                     </div>
-                    <div>
-                      <label htmlFor="tip-off-art-normal" className="block text-sm text-neutral-400">
-                        In 1–2 words/phrases, what tipped you off? <span className="text-neutral-500">(optional)</span>
-                      </label>
-                      <input
-                        id="tip-off-art-normal"
-                        type="text"
-                        value={tipOffResponse}
-                        onChange={(e) => setTipOffResponse(e.target.value)}
-                        placeholder="e.g. brushwork, composition..."
-                        className="mt-1.5 w-full rounded-none border border-white/20 bg-neutral-800/80 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-white/50 focus:outline-none focus:ring-1 focus:ring-white/50"
-                      />
-                    </div>
                   </>
                 )}
                 <div className="flex items-center gap-6 rounded-none border border-white/10 bg-neutral-900/50 px-4 py-3 text-sm">
