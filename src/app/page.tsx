@@ -1611,11 +1611,11 @@ export default function Home() {
                   </>
                 ) : (
                   <>
-                    <span className="text-neutral-400">Current streak</span>
+                    <span className="text-neutral-400">Correct</span>
                     <span className="font-semibold text-white">{streak}</span>
                     <span className="text-neutral-500">|</span>
-                    <span className="text-neutral-400">Best</span>
-                    <span className="font-semibold">{bestStreak}</span>
+                    <span className="text-neutral-400">Answered</span>
+                    <span className="font-semibold">{streak + fooledCount}</span>
                   </>
                 )}
               </div>
@@ -1734,11 +1734,11 @@ export default function Home() {
               )}
 
               <div className="flex items-center gap-6 rounded-none border border-white/10 bg-neutral-900/50 px-4 py-3 text-sm">
-                <span className="text-neutral-400">Current streak</span>
+                <span className="text-neutral-400">Correct</span>
                 <span className="font-semibold text-white">{streak}</span>
                 <span className="text-neutral-500">|</span>
-                <span className="text-neutral-400">Best</span>
-                <span className="font-semibold">{bestStreak}</span>
+                <span className="text-neutral-400">Answered</span>
+                <span className="font-semibold">{streak + fooledCount}</span>
               </div>
             </div>
           </section>
@@ -1897,11 +1897,11 @@ export default function Home() {
                   </>
                 )}
                 <div className="flex items-center gap-6 rounded-none border border-white/10 bg-neutral-900/50 px-4 py-3 text-sm">
-                  <span className="text-neutral-400">Current streak</span>
+                  <span className="text-neutral-400">Correct</span>
                   <span className="font-semibold text-white">{streak}</span>
                   <span className="text-neutral-500">|</span>
-                  <span className="text-neutral-400">Best</span>
-                  <span className="font-semibold">{bestStreak}</span>
+                  <span className="text-neutral-400">Answered</span>
+                  <span className="font-semibold">{streak + fooledCount}</span>
                 </div>
               </div>
             ) : (
