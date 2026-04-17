@@ -64,6 +64,15 @@ export default function AboutPage() {
             >
               Professor Frank Rose
             </a>
+            {" "}and{" "}
+            <a
+              href="https://arts.columbia.edu/profiles/lance-weiler"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-neutral-100 underline underline-offset-4 hover:text-white"
+            >
+              Professor Lance Weiler
+            </a>
             .
           </p>
           <p className="mt-4 leading-relaxed text-neutral-300">

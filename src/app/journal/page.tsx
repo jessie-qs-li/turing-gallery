@@ -3,6 +3,15 @@ import { SpecialText } from "@/components/ui/special-text";
 
 const entries = [
   {
+    date: "April 10",
+    items: [
+      "Added timed and marathon modes to visual art section",
+      "Added thirty questions to visual art question bank",
+      "Refined backend",
+      "Added exit survey (so I can connect factors like age, education background, and AI familiarity with their in-game performance)",
+    ],
+  },
+  {
     date: "April 3",
     items: [
       "Changed UI to make everything sharp edges",

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { SpecialText } from "@/components/ui/special-text";
 import type { LiteraturePair } from "@/types/literature";
 import { NORMAL_LITERATURE_PAIRS } from "@/data/normal-literature-pairs";
+import { TIMED_MARATHON_ART_PAIRS } from "@/data/timed-marathon-art-pairs";
 
 const LEGACY_LITERATURE_PAIRS: LiteraturePair[] = [
   // QUESTION 1 — Dickens, Bleak House
@@ -604,6 +605,31 @@ type GameView =
   | "timed-complete"
   | "marathon-complete"
   | "review";
+
+type SurveyAnswers = {
+  ageRange: string;
+  education: string;
+  field: string;
+  aiFamiliarity: number | null;
+  paidSubscriptions: string;
+  aiToolsUsed: string[];
+  sourceFamiliarity: number | null;
+  categoriesPlayed: string[];
+  modesTried: string[];
+  difficulty: string;
+  strategyChange: string;
+  detectionSignals: string[];
+  mostReliableTell: string;
+  preConfidence: string;
+  postConfidence: string;
+};
+
+const EMPTY_SURVEY: SurveyAnswers = {
+  ageRange: "", education: "", field: "", aiFamiliarity: null, paidSubscriptions: "",
+  aiToolsUsed: [], sourceFamiliarity: null, categoriesPlayed: [], modesTried: [],
+  difficulty: "", strategyChange: "", detectionSignals: [], mostReliableTell: "",
+  preConfidence: "", postConfidence: "",
+};
 type GameModule = "literature" | "music" | "art";
 type GameMode = "normal" | "timed" | "marathon";
 type ChoiceSide = "left" | "right";
@@ -700,15 +726,20 @@ export default function Home() {
   const [marathonOrderPosition, setMarathonOrderPosition] = useState(0);
   const [marathonEndReason, setMarathonEndReason] = useState<"timeout" | "wrong" | "depleted">("timeout");
   const [prevView, setPrevView] = useState<GameView>("complete");
+  const [survey, setSurvey] = useState<SurveyAnswers>(EMPTY_SURVEY);
+  const [surveySubmitted, setSurveySubmitted] = useState(false);
 
   const literatureBank = mode === "normal" ? NORMAL_MODE_BANK : TIMED_MARATHON_BANK;
   const currentLiteratureIndex =
-    (mode === "marathon" || mode === "timed") && marathonOrder.length > 0
+    module === "literature" && (mode === "marathon" || mode === "timed") && marathonOrder.length > 0
       ? marathonOrder[marathonOrderPosition]
       : currentIndex % literatureBank.length;
   const literaturePair = literatureBank[currentLiteratureIndex];
   const musicPair = MUSIC_PAIRS[currentIndex % MUSIC_PAIRS.length];
-  const artPair = VISUAL_ART_PAIRS[currentIndex % VISUAL_ART_PAIRS.length];
+  const artPair =
+    module === "art" && (mode === "timed" || mode === "marathon") && marathonOrder.length > 0
+      ? TIMED_MARATHON_ART_PAIRS[marathonOrder[marathonOrderPosition] % TIMED_MARATHON_ART_PAIRS.length]
+      : VISUAL_ART_PAIRS[currentIndex % VISUAL_ART_PAIRS.length];
 
   const pair = literaturePair;
   const humanExcerpt = pair.humanExcerpt;
@@ -767,11 +798,10 @@ export default function Home() {
     return () => clearInterval(id);
   }, [roundStartedAt, view, roundResult]);
 
-  // Timed mode countdown (Literature only)
+  // Timed mode countdown (Literature + Visual Art)
   useEffect(() => {
     const isTimedLiteratureRound =
-      view === "literature" &&
-      module === "literature" &&
+      (view === "literature" || view === "art") &&
       mode === "timed" &&
       roundResult === null;
 
@@ -795,11 +825,10 @@ export default function Home() {
     return () => clearInterval(id);
   }, [view, module, mode, roundResult, timedRemainingMs]);
 
-  // Marathon mode countdown (Literature only)
+  // Marathon mode countdown (Literature + Visual Art)
   useEffect(() => {
     const isMarathonLiteratureRound =
-      view === "literature" &&
-      module === "literature" &&
+      (view === "literature" || view === "art") &&
       mode === "marathon" &&
       roundResult === null;
 
@@ -864,6 +893,26 @@ export default function Home() {
     setTipOffResponse("");
     setRoundStartedAt(Date.now());
     setView("literature");
+  };
+
+  const goToNextArtTimedMarathonQuestion = () => {
+    if (marathonOrder.length > 0) {
+      if (marathonOrderPosition + 1 < marathonOrder.length) {
+        setMarathonOrderPosition(marathonOrderPosition + 1);
+      } else {
+        setMarathonEndReason("depleted");
+        setView("marathon-complete");
+        return;
+      }
+    }
+    setHumanOnLeft(Math.random() < 0.5);
+    setRoundResult(null);
+    setSelectedSide(null);
+    setSelectedConfidence(null);
+    setShowWhyA(false);
+    setShowWhyB(false);
+    setRoundStartedAt(Date.now());
+    setView("art");
   };
 
   const handleStartLiterature = () => {
@@ -944,8 +993,37 @@ export default function Home() {
       setShowWhyB(false);
       setRoundStartedAt(Date.now());
       setView("art");
+    } else if (pickedMode === "timed") {
+      setTimedRemainingMs(120000);
+      setTimedCorrectCount(0);
+      setTimedAnsweredCount(0);
+      const shuffled = makeShuffledIndices(TIMED_MARATHON_ART_PAIRS.length);
+      setMarathonOrder(shuffled);
+      setMarathonOrderPosition(0);
+      setHumanOnLeft(Math.random() < 0.5);
+      setRoundResult(null);
+      setSelectedSide(null);
+      setSelectedConfidence(null);
+      setShowWhyA(false);
+      setShowWhyB(false);
+      setRoundStartedAt(Date.now());
+      setView("art");
+    } else if (pickedMode === "marathon") {
+      setMarathonRemainingMs(60000);
+      setMarathonStreak(0);
+      setMarathonAnsweredCount(0);
+      const shuffled = makeShuffledIndices(TIMED_MARATHON_ART_PAIRS.length);
+      setMarathonOrder(shuffled);
+      setMarathonOrderPosition(0);
+      setHumanOnLeft(Math.random() < 0.5);
+      setRoundResult(null);
+      setSelectedSide(null);
+      setSelectedConfidence(null);
+      setShowWhyA(false);
+      setShowWhyB(false);
+      setRoundStartedAt(Date.now());
+      setView("art");
     }
-    // timed and marathon: placeholders — no action yet
   };
 
   const handleConfidenceSelect = (option: ConfidenceOption) => {
@@ -959,10 +1037,12 @@ export default function Home() {
 
     const responseTimeMs =
       roundStartedAt != null ? Date.now() - roundStartedAt : 0;
+    const artTimedMarathon = module === "art" && (mode === "timed" || mode === "marathon") && marathonOrder.length > 0;
+    const artRoundIndex = artTimedMarathon ? marathonOrder[marathonOrderPosition] : currentIndex;
     setResponseTimes((prev) =>
       prev.concat({
         module,
-        roundIndex: currentIndex,
+        roundIndex: artTimedMarathon ? artRoundIndex : currentIndex,
         responseTimeMs,
         correct: pickedHuman,
         confidenceOption: option,
@@ -981,7 +1061,7 @@ export default function Home() {
       sessionId,
       module,
       questionId,
-      roundIndex: currentIndex,
+      roundIndex: artTimedMarathon ? artRoundIndex : currentIndex,
       humanOnLeft,
       pickedSide: side,
       correct: pickedHuman,
@@ -997,11 +1077,11 @@ export default function Home() {
         setBestStreak((best) => Math.max(best, next));
         return next;
       });
-      if (module !== "literature") setView("correct");
+      if (module === "art" && mode === "normal") setView("correct");
     } else {
       setRoundResult("wrong");
       setFooledCount((prev) => prev + 1);
-      if (module !== "literature") setView("gameover");
+      if (module === "art" && mode === "normal") setView("gameover");
     }
   };
 
@@ -1102,12 +1182,47 @@ export default function Home() {
     setRoundResult("correct");
   };
 
+  const handleArtTimedBinaryChoice = (side: ChoiceSide) => {
+    if (module !== "art" || mode !== "timed" || view !== "art" || timedRemainingMs <= 0) return;
+    const pickedHuman = (side === "left" && isLeftHuman) || (side === "right" && isRightHuman);
+    const responseTimeMs = roundStartedAt != null ? Date.now() - roundStartedAt : 0;
+    const artRoundIndex = marathonOrder.length > 0 ? marathonOrder[marathonOrderPosition] : currentIndex;
+    setResponseTimes((prev) => prev.concat({ module, roundIndex: artRoundIndex, responseTimeMs, correct: pickedHuman, confidenceOption: side === "left" ? 1 : 6, humanOnLeft }));
+    setLastResponseTimeMs(responseTimeMs);
+    trackTrial({ sessionId, module, questionId: artPair.id, roundIndex: artRoundIndex, humanOnLeft, pickedSide: side, correct: pickedHuman, confidenceOption: side === "left" ? 1 : 6, responseTimeMs, gameMode: mode });
+    setTimedAnsweredCount((prev) => prev + 1);
+    if (pickedHuman) setTimedCorrectCount((prev) => prev + 1);
+    setRoundResult(pickedHuman ? "correct" : "wrong");
+  };
+
+  const handleArtMarathonBinaryChoice = (side: ChoiceSide) => {
+    if (module !== "art" || mode !== "marathon" || view !== "art" || marathonRemainingMs <= 0) return;
+    const pickedHuman = (side === "left" && isLeftHuman) || (side === "right" && isRightHuman);
+    const responseTimeMs = roundStartedAt != null ? Date.now() - roundStartedAt : 0;
+    const artRoundIndex = marathonOrder.length > 0 ? marathonOrder[marathonOrderPosition] : currentIndex;
+    setResponseTimes((prev) => prev.concat({ module, roundIndex: artRoundIndex, responseTimeMs, correct: pickedHuman, confidenceOption: side === "left" ? 1 : 6, humanOnLeft }));
+    setLastResponseTimeMs(responseTimeMs);
+    trackTrial({ sessionId, module, questionId: artPair.id, roundIndex: artRoundIndex, humanOnLeft, pickedSide: side, correct: pickedHuman, confidenceOption: side === "left" ? 1 : 6, responseTimeMs, gameMode: mode });
+    setMarathonAnsweredCount((prev) => prev + 1);
+    if (!pickedHuman) {
+      setMarathonEndReason("wrong");
+      setRoundResult("wrong");
+      return;
+    }
+    const bonusMs = Math.max(0, (60 - 3 * marathonAnsweredCount) * 1000);
+    setMarathonStreak((prev) => prev + 1);
+    setMarathonRemainingMs((prev) => prev + bonusMs);
+    setRoundResult("correct");
+  };
+
   const handleNextAfterReveal = () => {
     if (mode === "marathon" && roundResult === "wrong") {
       setView("marathon-complete");
       return;
     }
-    if (mode === "normal") {
+    if (module === "art" && (mode === "timed" || mode === "marathon")) {
+      goToNextArtTimedMarathonQuestion();
+    } else if (mode === "normal") {
       goToNextRound();
     } else {
       goToNextLiteratureQuestion();
@@ -1169,6 +1284,19 @@ export default function Home() {
     }
   };
 
+  const handleSurveySubmit = async () => {
+    try {
+      await fetch("/api/survey", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, ...survey }),
+      });
+    } catch {
+      // best-effort
+    }
+    setSurveySubmitted(true);
+  };
+
   const resetGame = () => {
     setView("choose");
     setMode("normal");
@@ -1196,6 +1324,8 @@ export default function Home() {
     setMarathonOrder([]);
     setMarathonOrderPosition(0);
     setMarathonEndReason("timeout");
+    setSurvey(EMPTY_SURVEY);
+    setSurveySubmitted(false);
   };
 
   return (
@@ -1228,7 +1358,7 @@ export default function Home() {
               <span className="mt-1 block">
                 This interactive study challenges participants to distinguish real art from AI imitations modeled
                 after famous creators. Compare pairs of texts, music, and visual art. Choose the human
-                work to help us measure how accurately and quickly we can detect AI-generated creativity.
+                work to help us measure how accurately and quickly we can detect AI imitations.
               </span>
             )}
           </p>
@@ -1536,58 +1666,82 @@ export default function Home() {
 
             <div className="grid gap-6 md:grid-cols-2">
               <div className="flex flex-col gap-3">
-                <div className="rounded-none border border-white/20 bg-neutral-900/60 p-5 shadow-lg">
+                <div className={`rounded-none border p-5 shadow-lg ${
+                  roundResult
+                    ? isLeftHuman
+                      ? "border-emerald-500/60 bg-neutral-900/60"
+                      : "border-neutral-400/40 bg-neutral-900/60"
+                    : "border-white/20 bg-neutral-900/60"
+                }`}>
                   <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-400">
                     Clip 1 (A)
                   </div>
-
                   <AudioClip30s src={leftMusicUrl} />
+                  {roundResult && (
+                    <div className={`mt-4 border-t pt-3 ${isLeftHuman ? "border-emerald-500/30" : "border-neutral-400/30"}`}>
+                      <p className={`text-sm font-semibold ${isLeftHuman ? "text-emerald-400" : "text-neutral-500"}`}>
+                        {isLeftHuman ? `Human — ${musicPair.composer}` : "A.I. generated"}
+                      </p>
+                    </div>
+                  )}
                 </div>
-                {roundResult && leftMusicExplanation && (
-                  <div className="flex flex-col gap-2">
-                    <WhyButton
-                      label="Why?"
-                      expanded={showWhyA}
-                      onToggle={() => setShowWhyA((v) => !v)}
-                    />
-                    {showWhyA && <WhyTooltip text={leftMusicExplanation} />}
-                  </div>
-                )}
               </div>
 
               <div className="flex flex-col gap-3">
-                <div className="rounded-none border border-white/20 bg-neutral-900/60 p-5 shadow-lg">
+                <div className={`rounded-none border p-5 shadow-lg ${
+                  roundResult
+                    ? isRightHuman
+                      ? "border-emerald-500/60 bg-neutral-900/60"
+                      : "border-neutral-400/40 bg-neutral-900/60"
+                    : "border-white/20 bg-neutral-900/60"
+                }`}>
                   <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-400">
                     Clip 2 (B)
                   </div>
-
                   <AudioClip30s src={rightMusicUrl} />
+                  {roundResult && (
+                    <div className={`mt-4 border-t pt-3 ${isRightHuman ? "border-emerald-500/30" : "border-neutral-400/30"}`}>
+                      <p className={`text-sm font-semibold ${isRightHuman ? "text-emerald-400" : "text-neutral-500"}`}>
+                        {isRightHuman ? `Human — ${musicPair.composer}` : "A.I. generated"}
+                      </p>
+                    </div>
+                  )}
                 </div>
-                {roundResult && rightMusicExplanation && (
-                  <div className="flex flex-col gap-2">
-                    <WhyButton
-                      label="Why?"
-                      expanded={showWhyB}
-                      onToggle={() => setShowWhyB((v) => !v)}
-                    />
-                    {showWhyB && <WhyTooltip text={rightMusicExplanation} />}
-                  </div>
-                )}
               </div>
             </div>
 
-            <ConfidenceScale
-              disabled={!!roundResult}
-              selected={selectedConfidence}
-              onSelect={handleConfidenceSelect}
-            />
+            {/* Sticky bottom controls */}
+            <div className="sticky bottom-0 flex flex-col gap-3 bg-black pb-4 pt-3">
+              {!roundResult && (
+                <ConfidenceScale
+                  disabled={false}
+                  selected={selectedConfidence}
+                  onSelect={handleConfidenceSelect}
+                />
+              )}
 
-            <div className="mt-4 flex items-center gap-6 rounded-none border border-white/10 bg-neutral-900/50 px-4 py-3 text-sm">
-              <span className="text-neutral-400">Current streak</span>
-              <span className="font-semibold text-white">{streak}</span>
-              <span className="text-neutral-500">|</span>
-              <span className="text-neutral-400">Best</span>
-              <span className="font-semibold">{bestStreak}</span>
+              {roundResult && (
+                <div className="flex items-center justify-between gap-4">
+                  <p className={`text-base font-semibold ${roundResult === "correct" ? "text-emerald-400" : "text-red-400"}`}>
+                    {roundResult === "correct" ? "Correct" : "Incorrect"}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleNextAfterReveal}
+                    className="rounded-none bg-white px-6 py-2.5 text-sm font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200"
+                  >
+                    {currentIndex >= MUSIC_PAIRS.length - 1 ? "See results" : "Next"}
+                  </button>
+                </div>
+              )}
+
+              <div className="flex items-center gap-6 rounded-none border border-white/10 bg-neutral-900/50 px-4 py-3 text-sm">
+                <span className="text-neutral-400">Current streak</span>
+                <span className="font-semibold text-white">{streak}</span>
+                <span className="text-neutral-500">|</span>
+                <span className="text-neutral-400">Best</span>
+                <span className="font-semibold">{bestStreak}</span>
+              </div>
             </div>
           </section>
         )}
@@ -1607,15 +1761,15 @@ export default function Home() {
               />
               <ModeCard
                 title="Timed Mode"
-                description="Coming soon."
+                description="Answer as many of 30 paintings as you can in 2 minutes. Both correct and incorrect answers move you forward."
                 cta="Play Timed Mode"
-                disabled
+                onClick={() => handlePickArtMode("timed")}
               />
               <ModeCard
                 title="Marathon Mode"
-                description="Coming soon."
+                description="One mistake ends your run. Start with 60 seconds — each correct answer earns bonus time. 30 paintings total."
                 cta="Play Marathon Mode"
-                disabled
+                onClick={() => handlePickArtMode("marathon")}
               />
             </div>
           </section>
@@ -1627,7 +1781,7 @@ export default function Home() {
             <div className="flex items-baseline justify-between gap-4">
               <div>
                 <p className="text-neutral-300">
-                  Identify the human-made artwork. A = Left image, B = Right image. Select your confidence:
+                  Identify the human-made artwork. A = Left image, B = Right image.{mode === "normal" ? " Select your confidence:" : ""}
                 </p>
                 <p className="mt-1 text-sm text-neutral-400">
                   Which one is actually by{" "}
@@ -1637,15 +1791,32 @@ export default function Home() {
                   ?
                 </p>
               </div>
-              <div className="flex w-24 flex-col items-end rounded-none border border-white/20 bg-neutral-900/60 px-4 py-2 tabular-nums text-white">
-                <span className="text-xs font-semibold uppercase tracking-widest opacity-60">Time</span>
-                <span className="text-2xl font-bold leading-tight">{Math.floor(elapsedSeconds)}s</span>
-              </div>
+              {mode === "normal" ? (
+                <div className="flex w-24 flex-col items-end rounded-none border border-white/20 bg-neutral-900/60 px-4 py-2 tabular-nums text-white">
+                  <span className="text-xs font-semibold uppercase tracking-widest opacity-60">Time</span>
+                  <span className="text-2xl font-bold leading-tight">{Math.floor(elapsedSeconds)}s</span>
+                </div>
+              ) : (
+                <div className={`flex w-24 flex-col items-end rounded-none border px-4 py-2 tabular-nums text-white ${
+                  (mode === "timed" ? timedRemainingMs : marathonRemainingMs) < 10000
+                    ? "border-red-500/60 bg-red-950/40"
+                    : (mode === "timed" ? timedRemainingMs : marathonRemainingMs) < 30000
+                    ? "border-amber-500/60 bg-neutral-900/60"
+                    : "border-white/20 bg-neutral-900/60"
+                }`}>
+                  <span className="text-xs font-semibold uppercase tracking-widest opacity-60">Time</span>
+                  <span className="text-2xl font-bold leading-tight">{formatTime((mode === "timed" ? timedRemainingMs : marathonRemainingMs) / 1000)}</span>
+                </div>
+              )}
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
               <div className="flex flex-col gap-3">
-                <div className="overflow-hidden rounded-none border border-white/20 bg-neutral-900/60 p-4 shadow-lg">
+                <div className={`overflow-hidden rounded-none border p-4 shadow-lg ${
+                  roundResult
+                    ? humanOnLeft ? "border-emerald-500/60 bg-neutral-900/60" : "border-neutral-400/40 bg-neutral-900/60"
+                    : "border-white/20 bg-neutral-900/60"
+                }`}>
                   <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-400">
                     Image A
                   </div>
@@ -1660,21 +1831,22 @@ export default function Home() {
                       className="object-contain"
                     />
                   </div>
+                  {roundResult && mode !== "normal" && (
+                    <div className={`mt-3 border-t pt-3 ${humanOnLeft ? "border-emerald-500/30" : "border-neutral-400/30"}`}>
+                      <p className={`text-sm font-semibold ${humanOnLeft ? "text-emerald-400" : "text-neutral-500"}`}>
+                        {humanOnLeft ? `Human — ${artPair.humanArtist}` : "A.I. generated"}
+                      </p>
+                    </div>
+                  )}
                 </div>
-                {roundResult && !humanOnLeft && (
-                  <div className="flex flex-col gap-2">
-                    <WhyButton
-                      label="Why?"
-                      expanded={showWhyA}
-                      onToggle={() => setShowWhyA((v) => !v)}
-                    />
-                    {showWhyA && <WhyTooltip text={artPair.explanation} />}
-                  </div>
-                )}
               </div>
 
               <div className="flex flex-col gap-3">
-                <div className="overflow-hidden rounded-none border border-white/20 bg-neutral-900/60 p-4 shadow-lg">
+                <div className={`overflow-hidden rounded-none border p-4 shadow-lg ${
+                  roundResult
+                    ? !humanOnLeft ? "border-emerald-500/60 bg-neutral-900/60" : "border-neutral-400/40 bg-neutral-900/60"
+                    : "border-white/20 bg-neutral-900/60"
+                }`}>
                   <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-400">
                     Image B
                   </div>
@@ -1689,218 +1861,339 @@ export default function Home() {
                       className="object-contain"
                     />
                   </div>
+                  {roundResult && mode !== "normal" && (
+                    <div className={`mt-3 border-t pt-3 ${!humanOnLeft ? "border-emerald-500/30" : "border-neutral-400/30"}`}>
+                      <p className={`text-sm font-semibold ${!humanOnLeft ? "text-emerald-400" : "text-neutral-500"}`}>
+                        {!humanOnLeft ? `Human — ${artPair.humanArtist}` : "A.I. generated"}
+                      </p>
+                    </div>
+                  )}
                 </div>
-                {roundResult && humanOnLeft && (
-                  <div className="flex flex-col gap-2">
-                    <WhyButton
-                      label="Why?"
-                      expanded={showWhyB}
-                      onToggle={() => setShowWhyB((v) => !v)}
-                    />
-                    {showWhyB && <WhyTooltip text={artPair.explanation} />}
-                  </div>
-                )}
               </div>
             </div>
 
-            <ConfidenceScale
-              disabled={!!roundResult}
-              selected={selectedConfidence}
-              onSelect={handleConfidenceSelect}
-            />
-
-            <div className="mt-4 flex items-center gap-6 rounded-none border border-white/10 bg-neutral-900/50 px-4 py-3 text-sm">
-              <span className="text-neutral-400">Current streak</span>
-              <span className="font-semibold text-white">{streak}</span>
-              <span className="text-neutral-500">|</span>
-              <span className="text-neutral-400">Best</span>
-              <span className="font-semibold">{bestStreak}</span>
-            </div>
+            {/* Sticky bottom for timed/marathon inline reveal; normal mode confidence scale stays in flow */}
+            {mode === "normal" ? (
+              <>
+                <ConfidenceScale
+                  disabled={!!roundResult}
+                  selected={selectedConfidence}
+                  onSelect={handleConfidenceSelect}
+                />
+                <div className="mt-4 flex items-center gap-6 rounded-none border border-white/10 bg-neutral-900/50 px-4 py-3 text-sm">
+                  <span className="text-neutral-400">Current streak</span>
+                  <span className="font-semibold text-white">{streak}</span>
+                  <span className="text-neutral-500">|</span>
+                  <span className="text-neutral-400">Best</span>
+                  <span className="font-semibold">{bestStreak}</span>
+                </div>
+              </>
+            ) : (
+              <div className="sticky bottom-0 flex flex-col gap-3 bg-black pb-4 pt-3">
+                {!roundResult && (
+                  mode === "timed" ? (
+                    <BinaryChoiceScale
+                      disabled={timedRemainingMs <= 0}
+                      onSelect={handleArtTimedBinaryChoice}
+                    />
+                  ) : (
+                    <BinaryChoiceScale
+                      disabled={marathonRemainingMs <= 0}
+                      onSelect={handleArtMarathonBinaryChoice}
+                    />
+                  )
+                )}
+                {roundResult && (
+                  <div className="flex items-center justify-between gap-4">
+                    <p className={`text-base font-semibold ${roundResult === "correct" ? "text-emerald-400" : "text-red-400"}`}>
+                      {roundResult === "correct" ? "Correct" : "Incorrect"}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleNextAfterReveal}
+                      className="rounded-none bg-white px-6 py-2.5 text-sm font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200"
+                    >
+                      {mode === "marathon" && roundResult === "wrong" ? "See results" : "Next"}
+                    </button>
+                  </div>
+                )}
+                <div className="flex items-center gap-6 rounded-none border border-white/10 bg-neutral-900/50 px-4 py-3 text-sm">
+                  {mode === "timed" ? (
+                    <>
+                      <span className="text-neutral-400">Correct</span>
+                      <span className="font-semibold text-white">{timedCorrectCount}</span>
+                      <span className="text-neutral-500">|</span>
+                      <span className="text-neutral-400">Answered</span>
+                      <span className="font-semibold">{timedAnsweredCount}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-neutral-400">Streak</span>
+                      <span className="font-semibold text-white">{marathonStreak}</span>
+                      <span className="text-neutral-500">|</span>
+                      <span className="text-neutral-400">Answered</span>
+                      <span className="font-semibold">{marathonAnsweredCount}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </section>
         )}
 
         {/* ----- VIEW: You were CORRECT! ----- */}
         {view === "correct" && (
-          <section className="flex flex-1 flex-col items-center justify-center gap-6 py-12 text-center">
-            <h2 className="text-2xl font-semibold text-white sm:text-3xl">
-              You were...
-            </h2>
-            <p className="text-4xl font-bold tracking-tight text-neutral-200 sm:text-5xl">
-              CORRECT!
-            </p>
-            <p className="text-neutral-300">
-              Your streak continues!
-            </p>
-            {lastResponseTimeMs != null && (
-              <p className="text-sm text-neutral-400">
-                You answered in <span className="font-medium text-neutral-300">{Math.floor(lastResponseTimeMs / 1000)}s</span>
-              </p>
+          <section className="flex flex-1 flex-col items-center gap-6 py-12">
+            {module === "art" ? (
+              <>
+                <div className="w-full max-w-2xl">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {[
+                      { label: "Image A", isHuman: humanOnLeft, filename: humanOnLeft ? artPair.humanFilename : artPair.aiFilename },
+                      { label: "Image B", isHuman: !humanOnLeft, filename: humanOnLeft ? artPair.aiFilename : artPair.humanFilename },
+                    ].map((card) => (
+                      <div key={card.label} className={`rounded-none border p-4 ${card.isHuman ? "border-emerald-500/40" : "border-neutral-600/40"}`}>
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-400">{card.label}</p>
+                        <img src={`${ART_BASE}/${encodeURI(card.filename)}`} alt={card.label} className="w-full object-cover" />
+                        <p className={`mt-2 text-xs font-semibold ${card.isHuman ? "text-emerald-400" : "text-neutral-500"}`}>
+                          {card.isHuman ? `Human — ${artPair.humanArtist}` : "A.I. generated"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-4xl font-bold tracking-tight text-emerald-400">Correct</p>
+                <p className="rounded-none border border-white/25 bg-neutral-900/60 px-6 py-3 text-lg self-center">
+                  Current Streak: <span className="font-bold text-white">{streak}</span>
+                </p>
+                <div className="w-full max-w-2xl text-left">
+                  <label htmlFor="tip-off-correct" className="block text-sm text-neutral-400">
+                    In 1–2 words/phrases, what tipped you off? <span className="text-neutral-500">(optional)</span>
+                  </label>
+                  <input
+                    id="tip-off-correct"
+                    type="text"
+                    value={tipOffResponse}
+                    onChange={(e) => setTipOffResponse(e.target.value)}
+                    placeholder="e.g. brushwork, composition..."
+                    className="mt-1.5 w-full rounded-none border border-white/20 bg-neutral-800/80 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-white/50 focus:outline-none focus:ring-1 focus:ring-white/50"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={goToNextRound}
+                  className="self-center rounded-none bg-white px-8 py-3 text-base font-semibold text-black shadow-lg transition hover:bg-neutral-200"
+                >
+                  Next Challenge
+                </button>
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-semibold text-white sm:text-3xl">
+                  You were...
+                </h2>
+                <p className="text-4xl font-bold tracking-tight text-neutral-200 sm:text-5xl">
+                  CORRECT!
+                </p>
+                <p className="text-neutral-300">
+                  Your streak continues!
+                </p>
+                {lastResponseTimeMs != null && (
+                  <p className="text-sm text-neutral-400">
+                    You answered in <span className="font-medium text-neutral-300">{Math.floor(lastResponseTimeMs / 1000)}s</span>
+                  </p>
+                )}
+                <p className="rounded-none border border-white/25 bg-neutral-900/60 px-6 py-3 text-lg">
+                  Current Streak: <span className="font-bold text-white">{streak}</span>
+                </p>
+                <div className="w-full max-w-md text-left">
+                  <label htmlFor="tip-off-correct" className="block text-sm text-neutral-400">
+                    In 1–2 words/phrases, what tipped you off? <span className="text-neutral-500">(optional)</span>
+                  </label>
+                  <input
+                    id="tip-off-correct"
+                    type="text"
+                    value={tipOffResponse}
+                    onChange={(e) => setTipOffResponse(e.target.value)}
+                    placeholder="e.g. word choice, rhythm..."
+                    className="mt-1.5 w-full rounded-none border border-white/20 bg-neutral-800/80 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-white/50 focus:outline-none focus:ring-1 focus:ring-white/50"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={goToNextRound}
+                  className="rounded-none bg-white px-8 py-3 text-base font-semibold text-black shadow-lg transition hover:bg-neutral-200"
+                >
+                  Next Challenge
+                </button>
+              </>
             )}
-            <p className="rounded-none border border-white/25 bg-neutral-900/60 px-6 py-3 text-lg">
-              Current Streak: <span className="font-bold text-white">{streak}</span>
-            </p>
-            <div className="w-full max-w-md text-left">
-              <label htmlFor="tip-off-correct" className="block text-sm text-neutral-400">
-                In 1–2 words/phrases, what tipped you off? <span className="text-neutral-500">(optional)</span>
-              </label>
-              <input
-                id="tip-off-correct"
-                type="text"
-                value={tipOffResponse}
-                onChange={(e) => setTipOffResponse(e.target.value)}
-                placeholder="e.g. word choice, rhythm..."
-                className="mt-1.5 w-full rounded-none border border-white/20 bg-neutral-800/80 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-white/50 focus:outline-none focus:ring-1 focus:ring-white/50"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={goToNextRound}
-              className="rounded-none bg-white px-8 py-3 text-base font-semibold text-black shadow-lg transition hover:bg-neutral-200"
-            >
-              Next Challenge
-            </button>
           </section>
         )}
 
         {/* ----- VIEW: Game Over ----- */}
         {view === "gameover" && (
-          <section className="flex flex-1 flex-col items-center justify-center gap-6 py-12 text-center">
-            <h2 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-              GAME OVER!
-            </h2>
-            <p className="text-neutral-300">
-              Your Streak: <span className="font-semibold text-white">{streak}</span>
-            </p>
-            <p className="text-neutral-300">
-              Fooled You: <span className="font-semibold text-neutral-300">{fooledCount}</span>{" "}
-              {fooledCount === 1 ? "Time" : "Times"}
-            </p>
-            {lastResponseTimeMs != null && (
-              <p className="text-sm text-neutral-400">
-                You answered in <span className="font-medium text-neutral-300">{Math.floor(lastResponseTimeMs / 1000)}s</span>
-              </p>
+          <section className="flex flex-1 flex-col items-center gap-6 py-12">
+            {module === "art" ? (
+              <>
+                <div className="w-full max-w-2xl">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {[
+                      { label: "Image A", isHuman: humanOnLeft, filename: humanOnLeft ? artPair.humanFilename : artPair.aiFilename },
+                      { label: "Image B", isHuman: !humanOnLeft, filename: humanOnLeft ? artPair.aiFilename : artPair.humanFilename },
+                    ].map((card) => (
+                      <div key={card.label} className={`rounded-none border p-4 ${card.isHuman ? "border-emerald-500/40" : "border-neutral-600/40"}`}>
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-neutral-400">{card.label}</p>
+                        <img src={`${ART_BASE}/${encodeURI(card.filename)}`} alt={card.label} className="w-full object-cover" />
+                        <p className={`mt-2 text-xs font-semibold ${card.isHuman ? "text-emerald-400" : "text-neutral-500"}`}>
+                          {card.isHuman ? `Human — ${artPair.humanArtist}` : "A.I. generated"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-4xl font-bold tracking-tight text-red-400">Incorrect</p>
+                <div className="flex gap-6 self-center text-neutral-300 text-sm">
+                  <span>Streak: <span className="font-semibold text-white">{streak}</span></span>
+                  <span>Fooled you: <span className="font-semibold text-white">{fooledCount}</span> {fooledCount === 1 ? "time" : "times"}</span>
+                </div>
+                <div className="w-full max-w-2xl text-left">
+                  <label htmlFor="tip-off-gameover" className="block text-sm text-neutral-400">
+                    In 1–2 words/phrases, what tipped you off? <span className="text-neutral-500">(optional)</span>
+                  </label>
+                  <input
+                    id="tip-off-gameover"
+                    type="text"
+                    value={tipOffResponse}
+                    onChange={(e) => setTipOffResponse(e.target.value)}
+                    placeholder="e.g. brushwork, composition..."
+                    className="mt-1.5 w-full rounded-none border border-white/20 bg-neutral-800/80 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-white/50 focus:outline-none focus:ring-1 focus:ring-white/50"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={resetGame}
+                  className="self-center rounded-none bg-white px-8 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200"
+                >
+                  Restart Game
+                </button>
+              </>
+            ) : (
+              <>
+                <h2 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
+                  GAME OVER!
+                </h2>
+                <p className="text-neutral-300">
+                  Your Streak: <span className="font-semibold text-white">{streak}</span>
+                </p>
+                <p className="text-neutral-300">
+                  Fooled You: <span className="font-semibold text-neutral-300">{fooledCount}</span>{" "}
+                  {fooledCount === 1 ? "Time" : "Times"}
+                </p>
+                {lastResponseTimeMs != null && (
+                  <p className="text-sm text-neutral-400">
+                    You answered in <span className="font-medium text-neutral-300">{Math.floor(lastResponseTimeMs / 1000)}s</span>
+                  </p>
+                )}
+                <div className="w-full max-w-md text-left">
+                  <label htmlFor="tip-off-gameover" className="block text-sm text-neutral-400">
+                    In 1–2 words/phrases, what tipped you off? <span className="text-neutral-500">(optional)</span>
+                  </label>
+                  <input
+                    id="tip-off-gameover"
+                    type="text"
+                    value={tipOffResponse}
+                    onChange={(e) => setTipOffResponse(e.target.value)}
+                    placeholder="e.g. word choice, rhythm..."
+                    className="mt-1.5 w-full rounded-none border border-white/20 bg-neutral-800/80 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-white/50 focus:outline-none focus:ring-1 focus:ring-white/50"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={resetGame}
+                  className="rounded-none bg-white px-8 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200"
+                >
+                  Restart Game
+                </button>
+              </>
             )}
-            <div className="w-full max-w-md text-left">
-              <label htmlFor="tip-off-gameover" className="block text-sm text-neutral-400">
-                In 1–2 words/phrases, what tipped you off? <span className="text-neutral-500">(optional)</span>
-              </label>
-              <input
-                id="tip-off-gameover"
-                type="text"
-                value={tipOffResponse}
-                onChange={(e) => setTipOffResponse(e.target.value)}
-                placeholder="e.g. word choice, rhythm..."
-                className="mt-1.5 w-full rounded-none border border-white/20 bg-neutral-800/80 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-500 focus:border-white/50 focus:outline-none focus:ring-1 focus:ring-white/50"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={resetGame}
-              className="rounded-none bg-white px-8 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200"
-            >
-              Restart Game
-            </button>
           </section>
         )}
 
-        {/* ----- VIEW: Challenge Complete (Visual Art: all 8; Music: all 5) ----- */}
-        {view === "complete" && module === "literature" && (
-          <section className="flex flex-1 flex-col items-center justify-center gap-6 py-12 text-center">
-            <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              You finished the Literature challenge!
-            </h2>
-            <p className="max-w-md text-sm text-neutral-300 sm:text-base">
-              You made it through all {NORMAL_MODE_BANK.length} questions. Your confidence ratings and response times help us understand how well people can tell human writing from AI-generated text.
-            </p>
-            <p className="rounded-none border border-white/25 bg-neutral-900/60 px-6 py-3 text-lg">
-              Final Streak: <span className="font-bold text-white">{streak}</span>
-            </p>
-            <div className="flex gap-3">
-              <button type="button" onClick={() => { setPrevView("complete"); setView("review"); }} className="rounded-none border border-white/30 bg-white/10 px-6 py-3 text-base font-semibold text-white transition hover:bg-white/20">Review answers</button>
-              <button type="button" onClick={resetGame} className="rounded-none bg-white px-6 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200">Back to challenges</button>
+        {/* ----- VIEW: Challenge Complete ----- */}
+        {(view === "complete" || view === "timed-complete" || view === "marathon-complete") && (
+          <section className="flex flex-1 flex-col gap-8 py-8 max-w-2xl">
+            {/* Score summary */}
+            <div className="flex flex-col gap-3">
+              {view === "complete" && module === "literature" && (
+                <>
+                  <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">You finished the Literature challenge!</h2>
+                  <p className="rounded-none border border-white/25 bg-neutral-900/60 px-5 py-2.5 text-base self-start">
+                    Score: <span className="font-bold text-white">{streak}</span>/{NORMAL_MODE_BANK.length}
+                  </p>
+                </>
+              )}
+              {view === "complete" && module === "art" && (
+                <>
+                  <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">You finished the Visual Art challenge!</h2>
+                  <p className="rounded-none border border-white/25 bg-neutral-900/60 px-5 py-2.5 text-base self-start">
+                    Score: <span className="font-bold text-white">{streak}</span>/{VISUAL_ART_PAIRS.length}
+                  </p>
+                </>
+              )}
+              {view === "complete" && module === "music" && (
+                <>
+                  <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">You finished the Music challenge!</h2>
+                  <p className="rounded-none border border-white/25 bg-neutral-900/60 px-5 py-2.5 text-base self-start">
+                    Score: <span className="font-bold text-white">{streak}</span>/{MUSIC_PAIRS.length}
+                  </p>
+                </>
+              )}
+              {view === "timed-complete" && (
+                <>
+                  <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">Time&apos;s up!</h2>
+                  <p className="rounded-none border border-white/25 bg-neutral-900/60 px-5 py-2.5 text-base self-start">
+                    Score: <span className="font-bold text-white">{timedCorrectCount}</span> / {timedAnsweredCount}
+                  </p>
+                </>
+              )}
+              {view === "marathon-complete" && (
+                <>
+                  <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+                    {marathonEndReason === "depleted" ? "Marathon complete" : "Game over!"}
+                  </h2>
+                  <p className="text-sm text-neutral-400">
+                    {marathonEndReason === "depleted" ? "You answered every question — impressive!" : marathonEndReason === "wrong" ? "You selected the wrong excerpt." : "Time's up!"}
+                  </p>
+                  <p className="rounded-none border border-white/25 bg-neutral-900/60 px-5 py-2.5 text-base self-start">
+                    Score: <span className="font-bold text-white">{marathonStreak}</span>/{TIMED_MARATHON_BANK.length}
+                  </p>
+                </>
+              )}
             </div>
-          </section>
-        )}
 
-        {view === "complete" && module === "art" && (
-          <section className="flex flex-1 flex-col items-center justify-center gap-6 py-12 text-center">
-            <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              You finished the Visual Art challenge!
-            </h2>
-            <p className="max-w-md text-sm text-neutral-300 sm:text-base">
-              Thanks for making it through all eight paintings and illustrations. Your streak and response
-              times help us understand how well people can tell human-made art from AI-generated images.
-            </p>
-            <p className="rounded-none border border-white/25 bg-neutral-900/60 px-6 py-3 text-lg">
-              Final Streak: <span className="font-bold text-white">{streak}</span>
-            </p>
-            <div className="flex gap-3">
-              <button type="button" onClick={() => { setPrevView("complete"); setView("review"); }} className="rounded-none border border-white/30 bg-white/10 px-6 py-3 text-base font-semibold text-white transition hover:bg-white/20">Review answers</button>
-              <button type="button" onClick={resetGame} className="rounded-none bg-white px-6 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200">Back to challenges</button>
-            </div>
-          </section>
-        )}
+            {/* Inline survey */}
+            <SurveySection
+              survey={survey}
+              setSurvey={setSurvey}
+              submitted={surveySubmitted}
+              onSubmit={handleSurveySubmit}
+            />
 
-        {view === "complete" && module === "music" && (
-          <section className="flex flex-1 flex-col items-center justify-center gap-6 py-12 text-center">
-            <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              You finished the Music challenge!
-            </h2>
-            <p className="max-w-md text-sm text-neutral-300 sm:text-base">
-              Thanks for working through all five composer pairs. Your streak and response times help us
-              understand how well people can tell human performances from AI-generated music.
-            </p>
-            <p className="rounded-none border border-white/25 bg-neutral-900/60 px-6 py-3 text-lg">
-              Final Streak: <span className="font-bold text-white">{streak}</span>
-            </p>
-            <div className="flex gap-3">
-              <button type="button" onClick={() => { setPrevView("complete"); setView("review"); }} className="rounded-none border border-white/30 bg-white/10 px-6 py-3 text-base font-semibold text-white transition hover:bg-white/20">Review answers</button>
-              <button type="button" onClick={resetGame} className="rounded-none bg-white px-6 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200">Back to challenges</button>
-            </div>
-          </section>
-        )}
-
-        {view === "timed-complete" && module === "literature" && mode === "timed" && (
-          <section className="flex flex-1 flex-col items-center justify-center gap-5 py-12 text-center">
-            <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              Time&apos;s up!
-            </h2>
-            <p className="text-neutral-300">
-              Timed Literature complete.
-            </p>
-            <p className="rounded-none border border-white/25 bg-neutral-900/60 px-6 py-3 text-lg">
-              Score: <span className="font-bold text-white">{timedCorrectCount}</span>
-              {" / "}
-              {timedAnsweredCount}
-            </p>
-            <div className="flex gap-3">
-              <button type="button" onClick={() => { setPrevView("timed-complete"); setView("review"); }} className="rounded-none border border-white/30 bg-white/10 px-6 py-3 text-base font-semibold text-white transition hover:bg-white/20">Review answers</button>
-              <button type="button" onClick={resetGame} className="rounded-none bg-white px-6 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200">Back to challenges</button>
-            </div>
-          </section>
-        )}
-
-        {view === "marathon-complete" && module === "literature" && mode === "marathon" && (
-          <section className="flex flex-1 flex-col items-center justify-center gap-5 py-12 text-center">
-            <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              {marathonEndReason === "depleted" ? "Marathon complete" : "Game over!"}
-            </h2>
-            <p className="text-neutral-300">
-              {marathonEndReason === "depleted"
-                ? "You answered every question — impressive!"
-                : marathonEndReason === "wrong"
-                ? "You selected the wrong excerpt."
-                : "Time's up!"}
-            </p>
-            <p className="rounded-none border border-white/25 bg-neutral-900/60 px-6 py-3 text-lg">
-              Streak score: <span className="font-bold text-white">{marathonStreak}</span>
-            </p>
-            <p className="text-sm text-neutral-400">
-              Questions answered: <span className="font-medium text-neutral-200">{marathonAnsweredCount}</span>
-            </p>
-            <div className="flex gap-3">
-              <button type="button" onClick={() => { setPrevView("marathon-complete"); setView("review"); }} className="rounded-none border border-white/30 bg-white/10 px-6 py-3 text-base font-semibold text-white transition hover:bg-white/20">Review answers</button>
-              <button type="button" onClick={resetGame} className="rounded-none bg-white px-6 py-3 text-base font-semibold text-neutral-900 shadow-lg transition hover:bg-neutral-200">Back to challenges</button>
+            {/* Bottom actions */}
+            <div className="flex items-center gap-4 border-t border-white/10 pt-6">
+              <button
+                type="button"
+                disabled={!surveySubmitted}
+                onClick={() => { setPrevView(view); setView("review"); }}
+                className={`rounded-none border px-5 py-2.5 text-sm font-semibold transition ${surveySubmitted ? "border-white/40 text-white hover:bg-white/10" : "border-white/15 text-neutral-600 cursor-not-allowed"}`}
+                title={surveySubmitted ? undefined : "Complete the survey to review your answers"}
+              >
+                Review answers
+              </button>
+              <button type="button" onClick={resetGame} className="text-sm text-neutral-500 underline underline-offset-4 hover:text-neutral-300">
+                Back to challenges
+              </button>
             </div>
           </section>
         )}
@@ -1927,7 +2220,11 @@ export default function Home() {
                 const litBank = mode === "normal" ? NORMAL_MODE_BANK : TIMED_MARATHON_BANK;
                 const litPair = isLit ? litBank[record.roundIndex % litBank.length] : null;
                 const musicPairR = isMusic ? MUSIC_PAIRS[record.roundIndex % MUSIC_PAIRS.length] : null;
-                const artPairR = isArt ? VISUAL_ART_PAIRS[record.roundIndex % VISUAL_ART_PAIRS.length] : null;
+                const artPairR = isArt
+                  ? (mode === "normal"
+                      ? VISUAL_ART_PAIRS[record.roundIndex % VISUAL_ART_PAIRS.length]
+                      : TIMED_MARATHON_ART_PAIRS[record.roundIndex % TIMED_MARATHON_ART_PAIRS.length])
+                  : null;
 
                 const humanWasLeft = record.humanOnLeft;
                 const userPickedLeft = record.confidenceOption <= 3;
@@ -2012,7 +2309,256 @@ export default function Home() {
             </button>
           </section>
         )}
+
       </main>
+    </div>
+  );
+}
+
+function SurveySection({
+  survey,
+  setSurvey,
+  submitted,
+  onSubmit,
+}: {
+  survey: SurveyAnswers;
+  setSurvey: React.Dispatch<React.SetStateAction<SurveyAnswers>>;
+  submitted: boolean;
+  onSubmit: () => void;
+}) {
+  const toggle = (field: "aiToolsUsed" | "categoriesPlayed" | "modesTried" | "detectionSignals", value: string) => {
+    setSurvey((prev) => {
+      const arr = prev[field] as string[];
+      return { ...prev, [field]: arr.includes(value) ? arr.filter((v) => v !== value) : [...arr, value] };
+    });
+  };
+
+  const isComplete =
+    survey.ageRange !== "" &&
+    survey.education !== "" &&
+    survey.field !== "" &&
+    survey.aiFamiliarity !== null &&
+    survey.paidSubscriptions !== "" &&
+    survey.aiToolsUsed.length > 0 &&
+    survey.sourceFamiliarity !== null &&
+    survey.categoriesPlayed.length > 0 &&
+    survey.modesTried.length > 0 &&
+    survey.difficulty !== "" &&
+    survey.strategyChange !== "" &&
+    survey.detectionSignals.length > 0 &&
+    survey.mostReliableTell.trim() !== "" &&
+    survey.preConfidence !== "" &&
+    survey.postConfidence !== "";
+
+  const chip = (selected: boolean) =>
+    `rounded-none border px-3 py-1.5 text-sm transition ${selected ? "border-white bg-white text-neutral-900" : "border-white/30 text-neutral-300 hover:border-white/60"}`;
+  const chipBlock = (selected: boolean) =>
+    `rounded-none border px-3 py-2 text-sm text-left transition ${selected ? "border-white bg-white text-neutral-900" : "border-white/30 text-neutral-300 hover:border-white/60"}`;
+
+  if (submitted) {
+    return (
+      <div className="rounded-none border border-emerald-500/30 bg-emerald-950/20 px-5 py-4">
+        <p className="text-sm font-semibold text-emerald-400">Survey submitted — thank you!</p>
+        <p className="mt-1 text-sm text-neutral-400">Your responses have been recorded.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-8 border-t border-white/10 pt-8">
+      <div>
+        <p className="text-base font-semibold text-white">Exit Survey</p>
+        <p className="mt-1 text-sm text-neutral-400">Complete the survey to review your answers.</p>
+      </div>
+
+      {/* About you */}
+      <div className="flex flex-col gap-5">
+        <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500">About you</p>
+
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-neutral-300">1. What is your age range?</p>
+          <div className="flex flex-wrap gap-2">
+            {["Under 18", "18–24", "25–34", "35–44", "45–54", "55+"].map((opt) => (
+              <button key={opt} type="button" onClick={() => setSurvey((p) => ({ ...p, ageRange: opt }))} className={chip(survey.ageRange === opt)}>{opt}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-neutral-300">2. What is your highest level of education?</p>
+          <div className="flex flex-wrap gap-2">
+            {["High school", "Some college", "Bachelor's", "Graduate degree", "Prefer not to say"].map((opt) => (
+              <button key={opt} type="button" onClick={() => setSurvey((p) => ({ ...p, education: opt }))} className={chip(survey.education === opt)}>{opt}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-neutral-300">3. Which best describes your field?</p>
+          <div className="flex flex-wrap gap-2">
+            {["Arts & writing", "Music & audio", "Technology & engineering", "Academia & research", "Business & finance", "Healthcare", "Education", "Other"].map((opt) => (
+              <button key={opt} type="button" onClick={() => setSurvey((p) => ({ ...p, field: opt }))} className={chip(survey.field === opt)}>{opt}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* AI relationship */}
+      <div className="flex flex-col gap-5">
+        <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500">Your relationship with AI</p>
+
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-neutral-300">4. How would you rate your overall AI familiarity? <span className="text-neutral-500">(1 = never used — 10 = daily power user)</span></p>
+          <div className="flex flex-wrap gap-2">
+            {[1,2,3,4,5,6,7,8,9,10].map((n) => (
+              <button key={n} type="button" onClick={() => setSurvey((p) => ({ ...p, aiFamiliarity: n }))} className={`rounded-none border w-10 py-1.5 text-sm tabular-nums transition ${survey.aiFamiliarity === n ? "border-white bg-white text-neutral-900" : "border-white/30 text-neutral-300 hover:border-white/60"}`}>{n}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-neutral-300">5. How many paid AI subscriptions do you currently have?</p>
+          <div className="flex flex-wrap gap-2">
+            {["None", "1", "2", "3+"].map((opt) => (
+              <button key={opt} type="button" onClick={() => setSurvey((p) => ({ ...p, paidSubscriptions: opt }))} className={chip(survey.paidSubscriptions === opt)}>{opt}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-neutral-300">6. Which AI tools have you used? <span className="text-neutral-500">(select all that apply)</span></p>
+          <div className="flex flex-wrap gap-2">
+            {["ChatGPT", "Claude", "Gemini", "Midjourney or DALL·E", "Suno or Udio", "GitHub Copilot", "Other"].map((opt) => (
+              <button key={opt} type="button" onClick={() => toggle("aiToolsUsed", opt)} className={chip(survey.aiToolsUsed.includes(opt))}>{opt}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Source familiarity */}
+      <div className="flex flex-col gap-5">
+        <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500">Familiarity with source material</p>
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-neutral-300">7. How familiar are you with the works of the authors, musicians, or artists featured in this game? <span className="text-neutral-500">(1 = not familiar at all — 5 = I study them professionally)</span></p>
+          <div className="flex flex-wrap gap-2">
+            {[1,2,3,4,5].map((n) => (
+              <button key={n} type="button" onClick={() => setSurvey((p) => ({ ...p, sourceFamiliarity: n }))} className={`rounded-none border w-10 py-1.5 text-sm tabular-nums transition ${survey.sourceFamiliarity === n ? "border-white bg-white text-neutral-900" : "border-white/30 text-neutral-300 hover:border-white/60"}`}>{n}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Game experience */}
+      <div className="flex flex-col gap-5">
+        <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500">Your experience in the game</p>
+
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-neutral-300">8. Which categories did you play? <span className="text-neutral-500">(select all that apply)</span></p>
+          <div className="flex flex-wrap gap-2">
+            {["Text", "Music", "Visual Art"].map((opt) => (
+              <button key={opt} type="button" onClick={() => toggle("categoriesPlayed", opt)} className={chip(survey.categoriesPlayed.includes(opt))}>{opt}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-neutral-300">9. Which mode(s) did you try? <span className="text-neutral-500">(select all that apply)</span></p>
+          <div className="flex flex-wrap gap-2">
+            {["Normal", "Timed", "Marathon"].map((opt) => (
+              <button key={opt} type="button" onClick={() => toggle("modesTried", opt)} className={chip(survey.modesTried.includes(opt))}>{opt}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-neutral-300">10. Overall, how difficult did you find distinguishing AI from human?</p>
+          <div className="flex flex-wrap gap-2">
+            {["Very easy", "Mostly easy", "Mixed", "Mostly hard", "Very hard"].map((opt) => (
+              <button key={opt} type="button" onClick={() => setSurvey((p) => ({ ...p, difficulty: opt }))} className={chip(survey.difficulty === opt)}>{opt}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-neutral-300">11. Did your detection strategy change as you played more rounds?</p>
+          <div className="flex flex-col gap-2">
+            {["Yes, I found a better system over time", "Yes, it actually got harder", "No, I stuck with the same approach", "I was mostly guessing"].map((opt) => (
+              <button key={opt} type="button" onClick={() => setSurvey((p) => ({ ...p, strategyChange: opt }))} className={chipBlock(survey.strategyChange === opt)}>{opt}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Detection signals */}
+      <div className="flex flex-col gap-5">
+        <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500">What tipped you off</p>
+
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-neutral-300">12. What signals made you suspect something was AI-generated? <span className="text-neutral-500">(select all that apply)</span></p>
+          <div className="flex flex-col gap-2">
+            {[
+              "Too polished or \"correct\"", "Emotionally flat", "Generic imagery or ideas",
+              "Wrong style for the artist", "Overly perfect structure", "Rhythm or pacing felt off",
+              "Something felt \"uncanny\"", "Too safe, no risk-taking", "Missing the artist's idiosyncrasies",
+            ].map((opt) => (
+              <button key={opt} type="button" onClick={() => toggle("detectionSignals", opt)} className={chipBlock(survey.detectionSignals.includes(opt))}>{opt}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-neutral-300">13. In your own words, what was the most reliable tell?</p>
+          <textarea
+            value={survey.mostReliableTell}
+            onChange={(e) => setSurvey((p) => ({ ...p, mostReliableTell: e.target.value }))}
+            rows={3}
+            placeholder="Describe what gave it away..."
+            className="rounded-none border border-white/30 bg-neutral-900 px-3 py-2 text-sm text-neutral-100 placeholder:text-neutral-600 focus:border-white/60 focus:outline-none resize-none"
+          />
+        </div>
+      </div>
+
+      {/* Reflection */}
+      <div className="flex flex-col gap-5">
+        <p className="text-xs font-semibold uppercase tracking-widest text-neutral-500">Reflection</p>
+
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-neutral-300">14. Before playing, how confident were you that you could detect AI imitation?</p>
+          <div className="flex flex-wrap gap-2">
+            {["Not at all", "Slightly", "Moderately", "Quite", "Very confident"].map((opt) => (
+              <button key={opt} type="button" onClick={() => setSurvey((p) => ({ ...p, preConfidence: opt }))} className={chip(survey.preConfidence === opt)}>{opt}</button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-neutral-300">15. After playing, how has that confidence changed?</p>
+          <div className="flex flex-col gap-2">
+            {[
+              "More confident — it's more detectable than I expected",
+              "About the same",
+              "Less confident — AI is better at imitation than I thought",
+              "Surprised by how much it varied by category",
+            ].map((opt) => (
+              <button key={opt} type="button" onClick={() => setSurvey((p) => ({ ...p, postConfidence: opt }))} className={chipBlock(survey.postConfidence === opt)}>{opt}</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2 self-start">
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={!isComplete}
+          className={`rounded-none px-8 py-3 text-base font-semibold shadow-lg transition ${isComplete ? "bg-white text-neutral-900 hover:bg-neutral-200" : "bg-neutral-700 text-neutral-500 cursor-not-allowed"}`}
+        >
+          Submit survey
+        </button>
+        {!isComplete && (
+          <p className="text-xs text-neutral-500">All questions must be answered before submitting.</p>
+        )}
+      </div>
     </div>
   );
 }
@@ -2081,35 +2627,6 @@ function ModeCard({
   );
 }
 
-function WhyButton({
-  label,
-  expanded,
-  onToggle,
-}: {
-  label: string;
-  expanded: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className="inline-flex items-center gap-1.5 rounded-none border border-white/30 bg-white/10 px-3 py-1.5 text-xs font-medium text-neutral-100 transition hover:bg-white/15"
-    >
-      <span>{label}</span>
-      <span className="text-neutral-200">{expanded ? "−" : "+"}</span>
-    </button>
-  );
-}
-
-function WhyTooltip({ text }: { text: string }) {
-  return (
-    <div className="rounded-none border border-white/15 bg-neutral-950/90 p-3 text-xs text-neutral-200">
-      <p className="font-medium text-neutral-200/90">Explanation for AI artifacts</p>
-      <p className="mt-1 leading-relaxed">{text}</p>
-    </div>
-  );
-}
 
 const CONFIDENCE_OPTIONS: ConfidenceOption[] = [1, 2, 3, 4, 5, 6];
 
